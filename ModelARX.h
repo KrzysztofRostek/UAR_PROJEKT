@@ -1,9 +1,9 @@
+#pragma once
 using namespace std;
 #include <vector>
 #include <cstdlib>
 #include <ctime>
 #include <cmath>
-
 class ModelARX
 {
 private:

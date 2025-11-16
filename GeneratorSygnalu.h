@@ -11,12 +11,12 @@ private:
     Tryb tryb;
 
     double A;        // amplituda
-    double S;        // sk³adowa sta³a
-    double p;        // wype³nienie (0..1)
+    double S;        // skÂ³adowa staÂ³a
+    double p;        // wypeÂ³nienie (0..1)
     double TRZ;      // okres rzeczywisty [s]
     int TT;          // taktowanie symulacji [ms]
 
-    int T;           // okres dyskretny [próbki]
+    int T;           // okres dyskretny [prÃ³bki]
 
 public:
     GeneratorSygnalu()
@@ -33,7 +33,7 @@ public:
     int getT() const { return T; }
     Tryb getTryb() const { return tryb; }
 
-    // OBOWI¥ZKOWE przeliczenie okresu dyskretnego
+    // OBOWIÂ¥ZKOWE przeliczenie okresu dyskretnego
     void przeliczT()
     {
         if (TT <= 0) TT = 1;

@@ -1,6 +1,7 @@
 // TU includy:
 
 #include <iostream>
+#include "ProstyUAR.h"
 #include <iomanip>
 #include "ModelARX.h"
 #include "RegulatorPID.h"
@@ -9,7 +10,7 @@
 //#include "RegulatorOnOFF.h" // Tylko sekcje 3 osobowe
 //#include "ProstyUAR.h"
 
-#define MAIN// ustaw na MAIN aby skompilowaæ program docelowy / ustaw na DEBUG aby skompilowaæ program testujacy
+#define DEBUG// ustaw na MAIN aby skompilowaæ program docelowy / ustaw na DEBUG aby skompilowaæ program testujacy
 
 #ifdef DEBUG
 
@@ -422,115 +423,8 @@ void TESTY_RegulatorPID::test_PI_skokJednostkowy_3()
 	}
 }
 
-// testy dla samego Regulatora ON/OFF:
-/*
-namespace TESTY_RegulatorOnOff
-{
-	void wykonaj_testy();
-	void test_brakPobudzenia();
-	void test_skokPowyzHist();
-	void test_skokPonizHist();
-}
-
-void TESTY_RegulatorOnOff::wykonaj_testy()
-{
-	test_brakPobudzenia();
-	test_skokPowyzHist();
-	test_skokPonizHist();
-}
-
-void TESTY_RegulatorOnOff::test_brakPobudzenia()
-{
-	//Sygnatura testu:
-	std::cerr << "RegOnOff (1.0,0.1) -> test zerowego pobudzenia: ";
-	try
-	{
-		// Przygotowanie danych:
-		RegulatorOnOff instancjaTestowa(1.0,0.1);
-		constexpr size_t LICZ_ITER = 30;
-		std::vector<double> sygWe(LICZ_ITER);      // pobudzenie modelu (tu same 0)
-		std::vector<double> spodzSygWy(LICZ_ITER); // spodziewana sekwencja wy (tu same 0)
-		std::vector<double> faktSygWy(LICZ_ITER);  // faktyczna sekwencja wy
-
-		// Symulacja modelu:
-
-		for (int i = 0; i < LICZ_ITER; i++)
-			faktSygWy[i] = instancjaTestowa.symuluj(sygWe[i]);
-
-		// Walidacja poprawnoœci i raport:
-		myAssert(spodzSygWy, faktSygWy);
-	}
-	catch (...)
-	{
-		std::cerr << "INTERUPTED! (niespodziwany wyjatek)\n";
-	}
-}
-
-void TESTY_RegulatorOnOff::test_skokPowyzHist()
-{
-	//Sygnatura testu:
-	std::cerr << "RegOnOff (1.0,0.1) -> test powyzej Hist: ";
-	try
-	{
-		// Przygotowanie danych:
-		RegulatorOnOff instancjaTestowa(1.0, 0.1);
-		constexpr size_t LICZ_ITER = 30;
-		std::vector<double> sygWe(LICZ_ITER);      // pobudzenie modelu (tu same 0)
-		std::vector<double> spodzSygWy(LICZ_ITER); // spodziewana sekwencja wy (tu same 0)
-		std::vector<double> faktSygWy(LICZ_ITER);  // faktyczna sekwencja wy
-
-		// Symulacja skoku jednostkowego w chwili 1. (!!i - daje 1 dla i != 0);
-		for (int i = 0; i < LICZ_ITER; i++)
-			sygWe[i] = !!i;
-		spodzSygWy = { 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-
-		// Symulacja modelu:
-		for (int i = 0; i < LICZ_ITER; i++)
-			faktSygWy[i] = instancjaTestowa.symuluj(sygWe[i]);
-
-		// Walidacja poprawnoœci i raport:
-		myAssert(spodzSygWy, faktSygWy);
-	}
-	catch (...)
-	{
-		std::cerr << "INTERUPTED! (niespodziwany wyjatek)\n";
-	}
-}
-
-void TESTY_RegulatorOnOff::test_skokPonizHist()
-{
-	//Sygnatura testu:
-	std::cerr << "RegOnOff (1.0,1.1) -> test ponizej Hist: ";
-	try
-	{
-		// Przygotowanie danych:
-		RegulatorOnOff instancjaTestowa(1.0, 1.1);
-		constexpr size_t LICZ_ITER = 30;
-		std::vector<double> sygWe(LICZ_ITER);      // pobudzenie modelu (tu same 0)
-		std::vector<double> spodzSygWy(LICZ_ITER); // spodziewana sekwencja wy (tu same 0)
-		std::vector<double> faktSygWy(LICZ_ITER);  // faktyczna sekwencja wy
-
-		// Symulacja skoku jednostkowego w chwili 1. (!!i - daje 1 dla i != 0);
-		for (int i = 0; i < LICZ_ITER; i++)
-			sygWe[i] = !!i;
-		spodzSygWy = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-
-		// Symulacja modelu:
-		for (int i = 0; i < LICZ_ITER; i++)
-			faktSygWy[i] = instancjaTestowa.symuluj(sygWe[i]);
-
-		// Walidacja poprawnoœci i raport:
-		myAssert(spodzSygWy, faktSygWy);
-	}
-	catch (...)
-	{
-		std::cerr << "INTERUPTED! (niespodziwany wyjatek)\n";
-	}
-}
-
-*/
 // testy dla pelnego UAR:
-/*
+
 namespace TESTY_ProstyUAR
 {
 	void wykonaj_testy();
@@ -548,8 +442,8 @@ void TESTY_ProstyUAR::wykonaj_testy()
 	test_UAR_1_skokJednostkowyPID();
 	test_UAR_2_skokJednostkowyPID();
 	test_UAR_3_skokJednostkowyPID();
-	test_UAR_4_skokJednostkowyONOFF();
-	test_UAR_5_skokJednostkowyONOFF();
+	//test_UAR_4_skokJednostkowyONOFF();
+	//test_UAR_5_skokJednostkowyONOFF();
 }
 
 void TESTY_ProstyUAR::test_UAR_1_brakPobudzenia()
@@ -692,7 +586,7 @@ void TESTY_ProstyUAR::test_UAR_3_skokJednostkowyPID()
 		std::cerr << "INTERUPTED! (niespodziwany wyjatek)\n";
 	}
 }
-
+/*
 void TESTY_ProstyUAR::test_UAR_4_skokJednostkowyONOFF()
 {
 	//Sygnatura testu:
@@ -774,8 +668,7 @@ int main()
 {
 	TESTY_ModelARX::wykonaj_testy();
 	TESTY_RegulatorPID::wykonaj_testy();
-	//TESTY_RegulatorOnOff::wykonaj_testy();
-	//TESTY_ProstyUAR::wykonaj_testy();
+	TESTY_ProstyUAR::wykonaj_testy();
 
 }
 
@@ -787,45 +680,35 @@ int main()
 
 int main()
 {
-/*
-ModelARX instancjaTestowa({ -0.4 }, { 0.6 }, 1, 0.01);
-    constexpr size_t LICZ_ITER = 30;
-    std::vector<double> sygWe(LICZ_ITER, 0.0); // inicjalizacja zerami
-    for (int i = 0; i < LICZ_ITER; i++){
-			sygWe[i] = !!i;
-    }
-
-    std::cout<<"ModelARX instancjaTestowa({ -0.4 }, { 0.6 }, 1, 0.01);~z podanym mozliwym szumem"<<endl;
-    for (size_t i = 0; i < 20; i++) {
-        double wynik = instancjaTestowa.symuluj(sygWe[i]);
-        std::cout << wynik << std::endl;
-    }
-
-    return 0;
-    */
+   // generator sygnału w
     GeneratorSygnalu gen;
     gen.ustawTryb(GeneratorSygnalu::SINUS);
     gen.ustawA(1.0);
-    gen.ustawTRZ(1.0); // okres rzeczywisty
-    gen.ustawTT(100);  // krok 100ms → T = 10 próbek
+    gen.ustawS(0.0);
+    gen.ustawTRZ(1.0);
+    gen.ustawTT(100);   // 100 próbek na okres
 
+    // regulator PID
     RegulatorPID pid(0.5, 10.0, 0.2, 1.0);
 
-    ModelARX arx({1.2, -0.6}, {0.1, 0.05});
+    // model ARX stabilny
+    ModelARX arx({ -0.4 }, { 0.6 });
 
-    Symulator sim(gen, pid, arx);
+    // UAR
+    ProstyUAR uar(arx, pid);
+    uar.reset();
 
-    for (int i = 0; i < 200; i++)
+    constexpr int N = 50;
+
+    std::cout << "i\tw\te\tu\ty\n";
+    for (int i = 0; i < N; ++i)
     {
         double w, e, u, y;
-        sim.krok(w, e, u, y);
-
-        std::cout << i << "\t"
-                  << w << "\t"
-                  << e << "\t"
-                  << u << "\t"
-                  << y << "\n";
+        uar.krok(w, e, u, y, gen);
+        std::cout << i << '\t' << w << '\t' << e << '\t' << u << '\t' << y << '\n';
     }
+
+    return 0;
 }
 
 

@@ -4,14 +4,16 @@
 #include <iomanip>
 #include "ModelARX.h"
 #include "RegulatorPID.h"
+#include "GeneratorSygnalu.h"
+#include "Symulator.h"
 //#include "RegulatorOnOFF.h" // Tylko sekcje 3 osobowe
 //#include "ProstyUAR.h"
 
-#define DEBUG// ustaw na MAIN aby skompilowaæ program docelowy / ustaw na DEBUG aby skompilowaæ program testujacy
+#define MAIN// ustaw na MAIN aby skompilowaÃ¦ program docelowy / ustaw na DEBUG aby skompilowaÃ¦ program testujacy
 
 #ifdef DEBUG
 
-//Funkcje pomocnicze dla testów:
+//Funkcje pomocnicze dla testÃ³w:
 
 void raportBleduSekwencji(std::vector<double>& spodz, std::vector<double>& fakt)
 {
@@ -28,7 +30,7 @@ void raportBleduSekwencji(std::vector<double>& spodz, std::vector<double>& fakt)
 
 bool porownanieSekwencji(std::vector<double>& spodz, std::vector<double>& fakt)
 {
-	constexpr double TOL = 1e-3;	// tolerancja dla porównañ zmiennoprzecinkowych
+	constexpr double TOL = 1e-3;	// tolerancja dla porÃ³wnaÃ± zmiennoprzecinkowych
 	bool result = fakt.size() == spodz.size();
 	for (int i = 0; result && i < fakt.size(); i++)
 		result = fabs(fakt[i] - spodz[i]) < TOL;
@@ -83,7 +85,7 @@ void TESTY_ModelARX::test_brakPobudzenia()
 		for (int i = 0; i < LICZ_ITER; i++)
 			faktSygWy[i] = instancjaTestowa.symuluj(sygWe[i]);
 
-		// Walidacja poprawnoœci i raport:
+		// Walidacja poprawnoÅ“ci i raport:
 		myAssert(spodzSygWy, faktSygWy);
 	}
 	catch (...)
@@ -117,7 +119,7 @@ void TESTY_ModelARX::test_skokJednostkowy_1()
 		for (int i = 0; i < LICZ_ITER; i++)
 			faktSygWy[i] = instancjaTestowa.symuluj(sygWe[i]);
 
-		// Walidacja poprawnoœci i raport:
+		// Walidacja poprawnoÅ“ci i raport:
 		myAssert(spodzSygWy, faktSygWy);
 	}
 	catch (...)
@@ -149,7 +151,7 @@ void TESTY_ModelARX::test_skokJednostkowy_2()
 		for (int i = 0; i < LICZ_ITER; i++)
 			faktSygWy[i] = instancjaTestowa.symuluj(sygWe[i]);
 
-		// Walidacja poprawnoœci i raport:
+		// Walidacja poprawnoÅ“ci i raport:
 		myAssert(spodzSygWy, faktSygWy);
 	}
 	catch (...)
@@ -180,7 +182,7 @@ void TESTY_ModelARX::test_skokJednostkowy_3()
 		for (int i = 0; i < LICZ_ITER; i++)
 			faktSygWy[i] = instancjaTestowa.symuluj(sygWe[i]);
 
-		// Weryfikacja poprawnoœci i raport:
+		// Weryfikacja poprawnoÅ“ci i raport:
 		myAssert(spodzSygWy, faktSygWy);
 	}
 	catch (...)
@@ -231,7 +233,7 @@ void TESTY_RegulatorPID::test_P_brakPobudzenia()
 		for (int i = 0; i < LICZ_ITER; i++)
 			faktSygWy[i] = instancjaTestowa.symuluj(sygWe[i]);
 
-		// Walidacja poprawnoœci i raport:
+		// Walidacja poprawnoÅ“ci i raport:
 		myAssert(spodzSygWy, faktSygWy);
 	}
 	catch (...)
@@ -264,7 +266,7 @@ void TESTY_RegulatorPID::test_P_skokJednostkowy()
 		for (int i = 0; i < LICZ_ITER; i++)
 			faktSygWy[i] = instancjaTestowa.symuluj(sygWe[i]);
 
-		// Walidacja poprawnoœci i raport:
+		// Walidacja poprawnoÅ“ci i raport:
 		myAssert(spodzSygWy, faktSygWy);
 	}
 	catch (...)
@@ -298,7 +300,7 @@ void TESTY_RegulatorPID::test_PI_skokJednostkowy_1()
 		for (int i = 0; i < LICZ_ITER; i++)
 			faktSygWy[i] = instancjaTestowa.symuluj(sygWe[i]);
 
-		// Walidacja poprawnoœci i raport:
+		// Walidacja poprawnoÅ“ci i raport:
 		myAssert(spodzSygWy, faktSygWy);
 	}
 	catch (...)
@@ -331,7 +333,7 @@ void TESTY_RegulatorPID::test_PI_skokJednostkowy_2()
 		for (int i = 0; i < LICZ_ITER; i++)
 			faktSygWy[i] = instancjaTestowa.symuluj(sygWe[i]);
 
-		// Walidacja poprawnoœci i raport:
+		// Walidacja poprawnoÅ“ci i raport:
 		myAssert(spodzSygWy, faktSygWy);
 	}
 	catch (...)
@@ -364,7 +366,7 @@ void TESTY_RegulatorPID::test_PID_skokJednostkowy()
 		for (int i = 0; i < LICZ_ITER; i++)
 			faktSygWy[i] = instancjaTestowa.symuluj(sygWe[i]);
 
-		// Walidacja poprawnoœci i raport:
+		// Walidacja poprawnoÅ“ci i raport:
 		myAssert(spodzSygWy, faktSygWy);
 	}
 	catch (...)
@@ -396,22 +398,22 @@ void TESTY_RegulatorPID::test_PI_skokJednostkowy_3()
 		// Symulacja modelu:
 		for (int i = 0; i < LICZ_ITER; i++)
 		{
-			if (i == LICZ_ITER * 1 / 5) // przelaczenie na wew. liczenie calki - nie powinno byæ zauwa¿alane
+			if (i == LICZ_ITER * 1 / 5) // przelaczenie na wew. liczenie calki - nie powinno byÃ¦ zauwaÂ¿alane
 				instancjaTestowa.setLiczCalk(RegulatorPID::LiczCalk::Wew);
 			if (i == LICZ_ITER * 2 / 5) // zmiana stalej calkowania - powinna byc tylko zmiana nachylenia
 				instancjaTestowa.setStalaCalk(5.0);
-			if (i == LICZ_ITER * 3 / 5) // przelaczenie na zew. liczenie calki - nie powinno byæ zauwa¿alane
+			if (i == LICZ_ITER * 3 / 5) // przelaczenie na zew. liczenie calki - nie powinno byÃ¦ zauwaÂ¿alane
 				instancjaTestowa.setLiczCalk(RegulatorPID::LiczCalk::Zew);
 			if (i == LICZ_ITER * 4 / 5) // zmiana stalej calkowania - powinien wsytapic skok wartosci i zmiana nachylenia
 				instancjaTestowa.setStalaCalk(10.0);
 			faktSygWy[i] = instancjaTestowa.symuluj(sygWe[i]);
 		}
-		// Uwaga przy poprawnej implementacji zmiany sposobu liczenia ca³ki, nie powinno doœæ do sytuacji, gdy
-		// zmiana sposobu liczenia powoduje skokow¹ zmianê wartoœci sterowania. dla liczenia ca³ki zwenetrznie
-		// zmiana stalej calkowania powinna powodowaæ skok. dla liczenia wewnêtrznego, powinno sie tylko zmienic
+		// Uwaga przy poprawnej implementacji zmiany sposobu liczenia caÂ³ki, nie powinno doÅ“Ã¦ do sytuacji, gdy
+		// zmiana sposobu liczenia powoduje skokowÂ¹ zmianÃª wartoÅ“ci sterowania. dla liczenia caÂ³ki zwenetrznie
+		// zmiana stalej calkowania powinna powodowaÃ¦ skok. dla liczenia wewnÃªtrznego, powinno sie tylko zmienic
 		// nachylenie.
 
-		// Walidacja poprawnoœci i raport:
+		// Walidacja poprawnoÅ“ci i raport:
 		myAssert(spodzSygWy, faktSygWy);
 	}
 	catch (...)
@@ -455,7 +457,7 @@ void TESTY_RegulatorOnOff::test_brakPobudzenia()
 		for (int i = 0; i < LICZ_ITER; i++)
 			faktSygWy[i] = instancjaTestowa.symuluj(sygWe[i]);
 
-		// Walidacja poprawnoœci i raport:
+		// Walidacja poprawnoÅ“ci i raport:
 		myAssert(spodzSygWy, faktSygWy);
 	}
 	catch (...)
@@ -486,7 +488,7 @@ void TESTY_RegulatorOnOff::test_skokPowyzHist()
 		for (int i = 0; i < LICZ_ITER; i++)
 			faktSygWy[i] = instancjaTestowa.symuluj(sygWe[i]);
 
-		// Walidacja poprawnoœci i raport:
+		// Walidacja poprawnoÅ“ci i raport:
 		myAssert(spodzSygWy, faktSygWy);
 	}
 	catch (...)
@@ -517,7 +519,7 @@ void TESTY_RegulatorOnOff::test_skokPonizHist()
 		for (int i = 0; i < LICZ_ITER; i++)
 			faktSygWy[i] = instancjaTestowa.symuluj(sygWe[i]);
 
-		// Walidacja poprawnoœci i raport:
+		// Walidacja poprawnoÅ“ci i raport:
 		myAssert(spodzSygWy, faktSygWy);
 	}
 	catch (...)
@@ -570,7 +572,7 @@ void TESTY_ProstyUAR::test_UAR_1_brakPobudzenia()
 		for (int i = 0; i < LICZ_ITER; i++)
 			faktSygWy[i] = instancjaTestowa.symuluj(sygWe[i]);
 
-		// Walidacja poprawnoœci i raport:
+		// Walidacja poprawnoÅ“ci i raport:
 		myAssert(spodzSygWy, faktSygWy);
 	}
 	catch (...)
@@ -608,7 +610,7 @@ void TESTY_ProstyUAR::test_UAR_1_skokJednostkowyPID()
 		for (int i = 0; i < LICZ_ITER; i++)
 			faktSygWy[i] = instancjaTestowa.symuluj(sygWe[i]);
 
-		// Walidacja poprawnoœci i raport:
+		// Walidacja poprawnoÅ“ci i raport:
 		myAssert(spodzSygWy, faktSygWy);
 	}
 	catch (...)
@@ -645,7 +647,7 @@ void TESTY_ProstyUAR::test_UAR_2_skokJednostkowyPID()
 		for (int i = 0; i < LICZ_ITER; i++)
 			faktSygWy[i] = instancjaTestowa.symuluj(sygWe[i]);
 
-		// Walidacja poprawnoœci i raport:
+		// Walidacja poprawnoÅ“ci i raport:
 		myAssert(spodzSygWy, faktSygWy);
 	}
 	catch (...)
@@ -682,7 +684,7 @@ void TESTY_ProstyUAR::test_UAR_3_skokJednostkowyPID()
 		for (int i = 0; i < LICZ_ITER; i++)
 			faktSygWy[i] = instancjaTestowa.symuluj(sygWe[i]);
 
-		// Walidacja poprawnoœci i raport:
+		// Walidacja poprawnoÅ“ci i raport:
 		myAssert(spodzSygWy, faktSygWy);
 	}
 	catch (...)
@@ -699,7 +701,7 @@ void TESTY_ProstyUAR::test_UAR_4_skokJednostkowyONOFF()
 	{
 		// Przygotowanie danych:
 		RegulatorOnOff testOnOff(2.0,0.1);
-		// dynamika obiektu musi byæ bardzo wolna aby regulator OnOff mia³ szanse dzia³aæ poprawnie.
+		// dynamika obiektu musi byÃ¦ bardzo wolna aby regulator OnOff miaÂ³ szanse dziaÂ³aÃ¦ poprawnie.
 		ModelARX testARX({ -0.95 }, { 0.05 }, 1);
 		ProstyUAR instancjaTestowa(testARX, testOnOff);
 		constexpr size_t LICZ_ITER = 30;
@@ -721,7 +723,7 @@ void TESTY_ProstyUAR::test_UAR_4_skokJednostkowyONOFF()
 		for (int i = 0; i < LICZ_ITER; i++)
 			faktSygWy[i] = instancjaTestowa.symuluj(sygWe[i]);
 
-		// Walidacja poprawnoœci i raport:
+		// Walidacja poprawnoÅ“ci i raport:
 		myAssert(spodzSygWy, faktSygWy);
 	}
 	catch (...)
@@ -738,7 +740,7 @@ void TESTY_ProstyUAR::test_UAR_5_skokJednostkowyONOFF()
 	{
 		// Przygotowanie danych:
 		RegulatorOnOff testOnOff(4.0, 0.2);
-		// dynamika obiektu musi byæ bardzo wolna aby regulator OnOff mia³ szanse dzia³aæ poprawnie.
+		// dynamika obiektu musi byÃ¦ bardzo wolna aby regulator OnOff miaÂ³ szanse dziaÂ³aÃ¦ poprawnie.
 		ModelARX testARX({ -0.95 }, { 0.05 }, 1);
 		ProstyUAR instancjaTestowa(testARX, testOnOff);
 		constexpr size_t LICZ_ITER = 30;
@@ -758,7 +760,7 @@ void TESTY_ProstyUAR::test_UAR_5_skokJednostkowyONOFF()
 		for (int i = 0; i < LICZ_ITER; i++)
 			faktSygWy[i] = instancjaTestowa.symuluj(sygWe[i]);
 
-		// Walidacja poprawnoœci i raport:
+		// Walidacja poprawnoÅ“ci i raport:
 		myAssert(spodzSygWy, faktSygWy);
 	}
 	catch (...)
@@ -770,7 +772,7 @@ void TESTY_ProstyUAR::test_UAR_5_skokJednostkowyONOFF()
 */
 int main()
 {
-	//TESTY_ModelARX::wykonaj_testy();
+	TESTY_ModelARX::wykonaj_testy();
 	TESTY_RegulatorPID::wykonaj_testy();
 	//TESTY_RegulatorOnOff::wykonaj_testy();
 	//TESTY_ProstyUAR::wykonaj_testy();
@@ -785,7 +787,7 @@ int main()
 
 int main()
 {
-
+/*
 ModelARX instancjaTestowa({ -0.4 }, { 0.6 }, 1, 0.01);
     constexpr size_t LICZ_ITER = 30;
     std::vector<double> sygWe(LICZ_ITER, 0.0); // inicjalizacja zerami
@@ -800,6 +802,30 @@ ModelARX instancjaTestowa({ -0.4 }, { 0.6 }, 1, 0.01);
     }
 
     return 0;
+    */
+    GeneratorSygnalu gen;
+    gen.ustawTryb(GeneratorSygnalu::SINUS);
+    gen.ustawA(1.0);
+    gen.ustawTRZ(1.0); // okres rzeczywisty
+    gen.ustawTT(100);  // krok 100ms â†’ T = 10 prÃ³bek
+
+    RegulatorPID pid(0.5, 10.0, 0.2, 1.0);
+
+    ModelARX arx({1.2, -0.6}, {0.1, 0.05});
+
+    Symulator sim(gen, pid, arx);
+
+    for (int i = 0; i < 200; i++)
+    {
+        double w, e, u, y;
+        sim.krok(w, e, u, y);
+
+        std::cout << i << "\t"
+                  << w << "\t"
+                  << e << "\t"
+                  << u << "\t"
+                  << y << "\n";
+    }
 }
 
 

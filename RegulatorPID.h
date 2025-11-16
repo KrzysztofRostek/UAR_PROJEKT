@@ -4,40 +4,50 @@
 class RegulatorPID
 {
 public:
-    enum LiczCalk { PROSTOKATNY, TRAPEZOWY, Wew, Zew, ZERO };
+    enum LiczCalk { PROSTOKATNY, TRAPEZOWY, Wew, Zew, ZERO };//Sposób obliczania całki
 
 private:
-    double Kp;
-    double Ti;
-    double Td;
-    double T;
+    double Kp;//wzmocnienie
+    double Ti;//stała całkowania
+    double Td;//stała różniczkowania
+    double T;//okres próbkowania
 
-    double e_prev;
-    double sum_internal;
-    double sum_external;
+    double e_poprzedni;//poprzedni uchyb u(k-1)
+    double sum_internal;//?
+    double sum_external;//?
 
     LiczCalk typCalki;
-    static constexpr double EPS = 1e-12;
+    static constexpr double EPS = 1e-12;//stała do porównań z zerem
 
 public:
     RegulatorPID(double Kp_ = 1.0, double Ti_ = 0.0, double Td_ = 0.0, double T_ = 1.0)
         : Kp(Kp_), Ti(Ti_), Td(Td_), T(T_),
-          e_prev(0.0), sum_internal(0.0), sum_external(0.0),
+          e_poprzedni(0.0), sum_internal(0.0), sum_external(0.0),
           typCalki(PROSTOKATNY)
-    {}
+    {}//Konstruktor domyślny regulatora
 
-    void reset()
+    void reset()//resetowanie uchybu,? i ?
     {
-        e_prev = 0.0;
+        e_poprzedni = 0.0;
         sum_internal = 0.0;
         sum_external = 0.0;
     }
 
-    void setKp(double kp) { Kp = kp; }
-    void setTi(double ti) { Ti = ti; }
-    void setTd(double td) { Td = td; }
-    void setT(double t)  { T = t; }
-    void setStalaCalk(double ti) { Ti = ti; }
+    void setKp(double kp) {//seter wzmocnienia
+         Kp = kp;
+         }
+    void setTi(double ti) {
+         Ti = ti;
+        }
+    void setTd(double td) {//seter stałej różniczkowania
+         Td = td;
+        }
+    void setT(double t) {//seter okresu próbkowania
+         T = t;
+        }
+    void setStalaCalk(double ti) {//seter stałej całkowania
+         Ti = ti;
+        }
 
     void setLiczCalk(LiczCalk metoda)
     {
@@ -77,7 +87,7 @@ public:
                     break;
 
                 case TRAPEZOWY:
-                    sum_internal += (T / (2.0 * Ti)) * (e + e_prev);
+                    sum_internal += (T / (2.0 * Ti)) * (e + e_poprzedni);
                     I = sum_internal;
                     break;
 
@@ -95,10 +105,10 @@ public:
         // --- D ---
         double D = 0.0;
         if (Td > EPS)
-            D = Td * (e - e_prev) / T;
+            D = Td * (e - e_poprzedni) / T;
 
         double u = P + I + D;
-        e_prev = e;
+        e_poprzedni = e;
 
         return u;
     }

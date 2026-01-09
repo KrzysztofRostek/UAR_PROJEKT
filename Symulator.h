@@ -1,57 +1,55 @@
 #pragma once
+
 #include "GeneratorSygnalu.h"
 #include "RegulatorPID.h"
 #include "ModelARX.h"
+#include "ProstyUAR.h"
 
-class Symulator
+class SymulatorUAR
 {
 private:
-    GeneratorSygnalu gen;
+    GeneratorSygnalu generator;
     RegulatorPID pid;
     ModelARX arx;
+    ProstyUAR uar;
 
-    double y_prev;     // ŷ(i) = y(i-1)
-    int i_krok;
+    int k; // numer kroku
 
 public:
-    Symulator(const GeneratorSygnalu& g,
-              const RegulatorPID& r,
-              const ModelARX& m)
-        : gen(g), pid(r), arx(m), y_prev(0.0), i_krok(0)
+    SymulatorUAR(const GeneratorSygnalu& gen,
+                 const RegulatorPID& pid_,
+                 const ModelARX& arx_)
+        : generator(gen),
+          pid(pid_),
+          arx(arx_),
+          uar(arx, pid),
+          k(0)
     {}
 
     void reset()
     {
-        pid.reset();
-        arx.reset();
-        y_prev = 0.0;
-        i_krok = 0;
+        k = 0;
+        uar.reset();
     }
 
-    // wykonuje jeden krok symulacji
-    void krok(double& w_out, double& e_out,
-              double& u_out, double& y_out)
+    void krok(double& w, double& e, double& u, double& y)
     {
-        // 1. wartość zadana
-        double w = gen.generuj(i_krok);
+        w = generator.generuj(k);
+        y = uar.symuluj(w);
+        e = w - y;
 
-        // 2. uchyb
-        double e = w - y_prev;
+        // u jest pośrednie – możemy je odtworzyć logicznie
+        u = pid.symuluj(e); // (opcjonalne – jeśli GUI chce u)
 
-        // 3. regulator PID
-        double u = pid.symuluj(e);
-
-        // 4. obiekt ARX
-        double y = arx.symuluj(u);
-
-        // 5. zapisz aktualną wartość jako poprzednią
-        y_prev = y;
-        i_krok++;
-
-        // przekazujemy wyniki na zewnątrz
-        w_out = w;
-        e_out = e;
-        u_out = u;
-        y_out = y;
+        k++;
     }
+
+    // ===== SETTERY dla GUI =====
+    void setKp(double kp) { pid.setKp(kp); }
+    void setTi(double ti) { pid.setStalaCalk(ti); }
+    void setTd(double td) { pid.setTd(td); }
+
+    void setGeneratorTryb(GeneratorSygnalu::Tryb t) { generator.ustawTryb(t); }
+    void setGeneratorA(double a) { generator.ustawA(a); }
+    void setGeneratorTRZ(double trz) { generator.ustawTRZ(trz); }
 };

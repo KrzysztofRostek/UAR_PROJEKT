@@ -1,63 +1,58 @@
 #pragma once
-// ProstyUAR.h  -- podmieniæ wszystkie stare pliki ProstyUAR
 
 #include "ModelARX.h"
 #include "RegulatorPID.h"
+#include "GeneratorSygnalu.h"
 
 class ProstyUAR
 {
 private:
-    ModelARX& obiekt;
-    RegulatorPID* pid;
-    double y_prev;   // pomiar opóŸniony o 1 próbkê
+    ModelARX& obiekt;//referemcka dp ARX
+    RegulatorPID& pid;//referencja do PID
+
+    double wartwyjsc_poprzedni;   //poprzednie wyjÅ›cie y(k-1)
 
 public:
-    // Konstruktor - przyjmujemy referencje do istniej¹cych obiektów
-    ProstyUAR(ModelARX& ob, RegulatorPID& r)
-        : obiekt(ob), pid(&r), y_prev(0.0)
+
+    ProstyUAR(ModelARX& arx, RegulatorPID& pid)  // Konstruktor
+        : obiekt(arx), pid(pid), wartwyjsc_poprzedni(0.0)
     {}
 
-    // Reset: resetujemy pamiêæ regulatora i obiektu
-    void reset()
+
+    void reset()//reset
     {
-        y_prev = 0.0;
-        if (pid) pid->reset();
+        wartwyjsc_poprzedni = 0.0;
+        pid.reset();
         obiekt.reset();
     }
 
-    // ----------------------------
-    // Signtura zgodna z Twoim main:
-    //   uar.krok(w,e,u,y);
-    // gdzie w,e,u,y s¹ zmiennymi w main (przez referencjê)
-    // ----------------------------
-    void krok(double& w, double& e, double& u, double& y)
+    void krok(double& generator, double& uchyb, double& PID, double& WartWyjsc, GeneratorSygnalu& gen, int k)
     {
-        // y_prev to pomiar opóŸniony (y(k-1))
-        double y_hat = y_prev;
-        e = w - y_hat;
+        // 1. wartoÅ›Ä‡ zadana
+        generator = gen.generuj(k);
 
-        // wylicz sygna³ steruj¹cy przez regulator
-        if (pid)
-            u = pid->symuluj(e);
-        else
-            u = 0.0;
+        // 2. uchyb
+        uchyb = generator - wartwyjsc_poprzedni;
 
-        // podaj sterowanie do modelu
-        y = obiekt.symuluj(u);
+        // 3. regulator
+        PID = pid.symuluj(uchyb);
 
-        // zapisz aktualne y jako poprzednie dla nastêpnego kroku
-        y_prev = y;
+        // 4. obiekt ARX
+        WartWyjsc = obiekt.symuluj(PID);
+
+        // 5. aktualizacja pamiÄ™ci
+        wartwyjsc_poprzedni = WartWyjsc;
     }
-
-    // ----------------------------
-    // Alternatywna metoda u¿ywana w niektórych testach:
-    //   y = uar.symuluj(w);
-    // ----------------------------
-    double symuluj(double w)
+    double symuluj(double wartosczadana)
     {
-        double e, u, y;
-        // wywo³ujemy krok z lokalnymi zmiennymi
-        krok(w, e, u, y);
-        return y;
+        double uchyb = wartosczadana - wartwyjsc_poprzedni;//obliczamy rÃ³Å¼nice miÄ™dzy zawrtoÅ›ciÄ… zadanÄ… a poprzednim wyjÅ›ciem obiektu
+
+        double PID = pid.symuluj(uchyb);//podajemy uchyb na regulatora PID
+
+        double WartWyjsc = obiekt.symuluj(PID);//podajemy sygnaÅ‚ sterujÄ…cy do ModeluARX
+
+        wartwyjsc_poprzedni = WartWyjsc;//zapisujemy wyjÅ›cie do obliczeÅ„ uchybu
+
+        return WartWyjsc;//zwracamy wartoÅ›Ä‡
     }
 };

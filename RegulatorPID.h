@@ -12,9 +12,9 @@ private:
     double Td;//stała różniczkowania
     double T;//okres próbkowania
 
-    double e_poprzedni;//poprzedni uchyb u(k-1)
-    double sum_internal;//?
-    double sum_external;//?
+    double uchyb_poprzedni;//poprzedni uchyb u(k-1)
+    double akum_wew;//akumulator całki prostokątny trapezowy wew
+    double akum_zew;//akumulator całki zew
 
     LiczCalk typCalki;
     static constexpr double EPS = 1e-12;//stała do porównań z zerem
@@ -22,23 +22,20 @@ private:
 public:
     RegulatorPID(double Kp_ = 1.0, double Ti_ = 0.0, double Td_ = 0.0, double T_ = 1.0)
         : Kp(Kp_), Ti(Ti_), Td(Td_), T(T_),
-          e_poprzedni(0.0), sum_internal(0.0), sum_external(0.0),
+          uchyb_poprzedni(0.0), akum_wew(0.0), akum_zew(0.0),
           typCalki(PROSTOKATNY)
     {}//Konstruktor domyślny regulatora
 
     void reset()//resetowanie uchybu,? i ?
     {
-        e_poprzedni = 0.0;
-        sum_internal = 0.0;
-        sum_external = 0.0;
+        uchyb_poprzedni = 0.0;
+        akum_wew = 0.0;
+        akum_zew = 0.0;
     }
 
     void setKp(double kp) {//seter wzmocnienia
          Kp = kp;
          }
-    void setTi(double ti) {
-         Ti = ti;
-        }
     void setTd(double td) {//seter stałej różniczkowania
          Td = td;
         }
@@ -49,67 +46,78 @@ public:
          Ti = ti;
         }
 
-    void setLiczCalk(LiczCalk metoda)
+    void setLiczCalk(LiczCalk metoda)//zmiana sposobu liczenia całki
     {
-        if (typCalki != metoda) {
-            // Synchronizacja pamięci całki
-            if (typCalki == Zew && metoda != Zew) {
-                // Zew -> Wew: przenieś stan
-                sum_internal = sum_external / (Ti > EPS ? Ti : 1.0);
+        if (typCalki != metoda) {//sprawdzamy czy sposób liczenia na jaki chcemy zmienić jest inny od akutalnego
+            if (typCalki == Zew && metoda != Zew) {//tylko dla całki zew
+                double ZapiszTi;
+                if(Ti > EPS ){//jeśli Ti jest bardzo małe pobieramy wartość 1 aby uniknąć dzielenia przez 0
+                ZapiszTi=Ti;
+                }
+                else{
+                ZapiszTi=1.0;
+                };
+                akum_wew = akum_zew / ZapiszTi;
             }
-            else if (typCalki != Zew && metoda == Zew) {
-                // Wew -> Zew: przenieś stan
-                sum_external = sum_internal * (Ti > EPS ? Ti : 1.0);
+            else if (typCalki != Zew && metoda == Zew) {//zmiana z wew na zew
+                double ZapiszTi;
+                if(Ti>EPS){//jeśli Ti jest bardzo małe pobieramy wartość 1 aby uniknąć mnożenia przez 0
+                    ZapiszTi = Ti;
+                }
+                else{
+                    ZapiszTi = 1.0;
+                };
+                akum_zew = akum_wew * ZapiszTi;
             }
         }
-        typCalki = metoda;
+        typCalki = metoda;//ustawiamy nowy aktualny typ liczenia całki
     }
 
     LiczCalk getLiczCalk() const { return typCalki; }
 
-    double symuluj(double e)
+    double symuluj(double uchyb)
     {
         // --- P ---
-        double P = Kp * e;
+        double P = Kp * uchyb;//liczenie składnika proporcjonalnego P=Kp*e
 
         // --- I ---
-        double I = 0.0;
-        bool integral_enabled = (typCalki != ZERO) && (Ti > EPS);
+        double I = 0.0;//tworzenie zmiennej do przechowywania wartości
+        bool czy_calka= (typCalki != ZERO) && (Ti > EPS);//sprawdzanie czy to całka i unikanie dzielenia przez 0
 
-        if (integral_enabled)
+        if (czy_calka)
         {
-            switch (typCalki)
+            switch (typCalki)//wybór metody całkowania
             {
                 case PROSTOKATNY:
                 case Wew:
-                    sum_internal += (T / Ti) * e;
-                    I = sum_internal;
+                    akum_wew += (T / Ti) * uchyb;
+                    I = akum_wew;
                     break;
 
                 case TRAPEZOWY:
-                    sum_internal += (T / (2.0 * Ti)) * (e + e_poprzedni);
-                    I = sum_internal;
+                    akum_wew += (T / (2.0 * Ti)) * (uchyb + uchyb_poprzedni);
+                    I = akum_wew;
                     break;
 
                 case Zew:
-                    sum_external += T * e;
-                    I = sum_external / Ti;
+                    akum_zew += T * uchyb;
+                    I = akum_zew / Ti;
                     break;
 
-                default:
+                default://zabezpieczenie na wypadek nieznanego typu
                     I = 0.0;
                     break;
             }
         }
 
         // --- D ---
-        double D = 0.0;
+        double D = 0.0;//różniczka
         if (Td > EPS)
-            D = Td * (e - e_poprzedni) / T;
+            D = Td * (uchyb - uchyb_poprzedni) / T;//aproksymacja pochodnej
 
-        double u = P + I + D;
-        e_poprzedni = e;
+        double PID = P + I + D;//suma składników P I D
+        uchyb_poprzedni = uchyb;//akutalizacja poprzedniego uchybu
 
-        return u;
+        return PID;
     }
 };

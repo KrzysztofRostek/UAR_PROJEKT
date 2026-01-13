@@ -16,10 +16,10 @@ private:
 
     // ===== STAN SYMULACJI =====
     int k;          // numer kroku
-    double w;       // wartość zadana
+    double w;       // wartoœæ zadana
     double e;       // uchyb
     double u;       // sterowanie (PID)
-    double y;       // wyjście obiektu
+    double y;       // wyjœcie obiektu
 
 public:
     // ===== KONSTRUKTOR =====
@@ -50,7 +50,12 @@ public:
     void setGeneratorA(double a) { generator.ustawA(a); }
     void setGeneratorS(double s) { generator.ustawS(s); }
     void setGeneratorP(double p) { generator.ustawP(p); }
-    void setGeneratorTRZ(double trz) { generator.ustawTRZ(trz); }
+    void setGeneratorCzestotliwosc(double f){
+    if (f <= 0.0){return;}
+    double trz = 1.0 / f;
+    generator.ustawTRZ(trz);
+}
+
     void setGeneratorTT(int tt) { generator.ustawTT(tt); }
 
     //  Regulator PID

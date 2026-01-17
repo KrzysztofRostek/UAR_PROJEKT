@@ -34,6 +34,34 @@ public:
         srand(time(0));
         reset();
     }
+   void ustawParametry(const vector<double>& a_wektor,
+                   const vector<double>& b_wektor,
+                   int nowe_opoznienie,
+                   double nowe_odchylenie)
+{
+    opoznienie = nowe_opoznienie;
+    odchylenie = nowe_odchylenie;
+
+    if (a_wektor.size() < 10) {
+        IleA = a_wektor.size();
+    } else {
+        IleA = 10;
+    }
+
+    if (b_wektor.size() < 10) {
+        IleB = b_wektor.size();
+    } else {
+        IleB = 10;
+    }
+
+    for (int i = 0; i < IleA; ++i) {
+        A[i] = a_wektor[i];
+    }
+
+    for (int i = 0; i < IleB; ++i) {
+        B[i] = b_wektor[i];
+    }
+}
     void reset()//resetowanie histori wyjść i histori wartości sterujących
     {
         for (int i = 0; i < IleA; ++i) {

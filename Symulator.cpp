@@ -1,4 +1,4 @@
-#include "SymulatorUAR.h"
+#include "Symulator.h"
 
 //KONSTRUKTOR
 SymulatorUAR::SymulatorUAR(const GeneratorSygnalu& gen,
@@ -17,7 +17,7 @@ SymulatorUAR::SymulatorUAR(const GeneratorSygnalu& gen,
       u(0.0),
       y(0.0)
 {
-    timer.setInterval(200); // domyœlny interwa³ 200 ms
+    timer.setInterval(200);
     connect(&timer, &QTimer::timeout,
             this, &SymulatorUAR::Tick);
 }
@@ -60,3 +60,4 @@ void SymulatorUAR::reset()
     w = e = u = y = 0.0;
     uar.reset();
 }
+

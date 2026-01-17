@@ -8,82 +8,61 @@
 class SymulatorUAR
 {
 private:
-    // ===== WARSTWA DANYCH =====
+    // WARSTWA DANYCH
     GeneratorSygnalu generator;
     RegulatorPID pid;
     ModelARX arx;
     ProstyUAR uar;
 
-    // ===== STAN SYMULACJI =====
-    int k;          // numer kroku
-    double w;       // wartoœæ zadana
-    double e;       // uchyb
-    double u;       // sterowanie (PID)
-    double y;       // wyjœcie obiektu
+    // STAN SYMULACJI
+    int k;
+    double w, e, u, y;
+
+    // ZEGAR
+    bool symuluj;
+    int interwalMs;
 
 public:
-    // ===== KONSTRUKTOR =====
+    //KONSTRUKTOR
     SymulatorUAR(const GeneratorSygnalu& gen,
-                 const RegulatorPID& pid_,
-                 const ModelARX& arx_)
-        : generator(gen),
-          pid(pid_),
-          arx(arx_),
-          uar(arx, pid),
-          k(0),
-          w(0.0),
-          e(0.0),
-          u(0.0),
-          y(0.0)
-    {}
+                 const RegulatorPID& pid,
+                 const ModelARX& arx);
 
-    // ===== RESET =====
-    void reset()
-    {
-        k = 0;
-        w = e = u = y = 0.0;
-        uar.reset();
-    }
+    //STEROWANIE SYMULACJĄ
+    void start();
+    void stop();
+    void reset();
+    void krokSymulacji();
 
-    // Generator
-    void setGeneratorTryb(GeneratorSygnalu::Tryb t) { generator.ustawTryb(t); }
-    void setGeneratorA(double a) { generator.ustawA(a); }
-    void setGeneratorS(double s) { generator.ustawS(s); }
-    void setGeneratorP(double p) { generator.ustawP(p); }
-    void setGeneratorCzestotliwosc(double f){
-    if (f <= 0.0){return;}
-    double trz = 1.0 / f;
-    generator.ustawTRZ(trz);
-}
+    //USTAWIENIA GENERATORA
+    void setGeneratorTryb(GeneratorSygnalu::Tryb t);
+    void setGeneratorA(double a);
+    void setGeneratorS(double s);
+    void setGeneratorP(double p);
+    void setGeneratorCzestotliwosc(double f);
+    void setGeneratorTT(int tt);
 
-    void setGeneratorTT(int tt) { generator.ustawTT(tt); }
+    //PID
+    void setPID_Kp(double kp);
+    void setPID_Ti(double ti);
+    void setPID_Td(double td);
+    void setPID_T(double t);
+    void setPID_TypCalki(RegulatorPID::LiczCalk typ);
 
-    //  Regulator PID
-    void setPID_Kp(double kp) { pid.setKp(kp); }
-    void setPID_Ti(double ti) { pid.setStalaCalk(ti); }
-    void setPID_Td(double td) { pid.setTd(td); }
-    void setPID_T(double t) { pid.setT(t); }
-    void setPID_TypCalki(RegulatorPID::LiczCalk typ) { pid.setLiczCalk(typ); }
-    // ARX
+    //ARX
     void setARX(const std::vector<double>& a,
-            const std::vector<double>& b,
-            int opoznienie,
-            double szum)
-{
-    arx = ModelARX(a, b, opoznienie, szum);
-    reset();
-}
+                const std::vector<double>& b,
+                int opoznienie,
+                double szum);
 
-    void krokSymulacji()
-    {
-        uar.krok(w, e, u, y, generator, k);
-        k++;
-    }
+    //GETTERY DLA GUI
+    int getKrok() const;
+    double getWartoscZadana() const;
+    double getUchyb() const;
+    double getSterowanie() const;
+    double getWyjscie() const;
 
-    int getKrok() const { return k; }
-
-    double getWartoscZadana() const { return w; }   // w(k)
-    double getUchyb() const { return e; }           // e(k)
-    double getSterowanie() const { return u; }      // u(k)
-    double getWyjscie() const { return y; }         // y(k)
+    int getInterwalMs() const;
+    void setInterwalMs(int ms);
+    bool czysymuluj() const;
 };

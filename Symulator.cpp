@@ -17,7 +17,7 @@ SymulatorUAR::SymulatorUAR(const GeneratorSygnalu& gen,
       u(0.0),
       y(0.0)
 {
-    timer.setInterval(200);
+    timer.setInterwal(200);
     connect(&timer, &QTimer::timeout,
             this, &SymulatorUAR::Tick);
 }
@@ -60,4 +60,3 @@ void SymulatorUAR::reset()
     w = e = u = y = 0.0;
     uar.reset();
 }
-

@@ -29,16 +29,50 @@ private:
     QTimer timer;
 
 public:
-    // KONSTRUKTOR
+    // KONSTRUKTOR - INLINE
     SymulatorUAR(const GeneratorSygnalu& gen,
-                 const RegulatorPID& pid,
-                 const ModelARX& arx,
-                 QObject* parent = nullptr);
+                 const RegulatorPID& pid_,
+                 const ModelARX& arx_,
+                 QObject* parent = nullptr)
+        : QObject(parent),
+          generator(gen),
+          pid(pid_),
+          arx(arx_),
+          uar(arx, pid),
+          symuluj(false),
+          k(0),
+          w(0.0),
+          e(0.0),
+          u(0.0),
+          y(0.0),
+          interwalMs(200)
+    {
+        timer.setInterval(interwalMs);
+        connect(&timer, &QTimer::timeout,
+                this, &SymulatorUAR::Tick);
+    }
 
     // STEROWANIE SYMULACJĄ
-    void start();
-    void stop();
-    void reset();
+    void start()
+    {
+        symuluj = true;
+        if (!timer.isActive())
+            timer.start();
+    }
+
+    void stop()
+    {
+        symuluj = false;
+        timer.stop();
+    }
+
+    void reset()
+    {
+        stop();
+        k = 0;
+        w = e = u = y = 0.0;
+        uar.reset();
+    }
 
     // Generator
     void setGeneratorTryb(GeneratorSygnalu::Tryb t) { generator.ustawTryb(t); }
@@ -63,7 +97,8 @@ public:
     void setARX(const std::vector<double>& a,
                 const std::vector<double>& b,
                 int opoznienie,
-                double szum) {
+                double szum)
+    {
         arx.ustawParametry(a, b, opoznienie, szum);
         reset();
     }
@@ -71,8 +106,11 @@ public:
     // Ręczny krok symulacji
     void krokSymulacji()
     {
-        uar.krok(w, e, u, y, generator, k);
-        k++;
+        if (symuluj)
+        {
+            uar.krok(w, e, u, y, generator, k);
+            k++;
+        }
     }
 
     // GETTERY
@@ -81,14 +119,22 @@ public:
     double getUchyb() const { return e; }
     double getSterowanie() const { return u; }
     double getWyjscie() const { return y; }
+
     int getInterwalMs() const { return interwalMs; }
-    void setInterwalMs(int ms) {
+    void setInterwalMs(int ms)
+    {
         if (ms < 1) ms = 1;
         interwalMs = ms;
         timer.setInterval(ms);
     }
+
     bool czysymuluj() const { return symuluj; }
 
 private slots:
-    void Tick();
+    void Tick()
+    {
+        if (!symuluj) return;
+        uar.krok(w, e, u, y, generator, k);
+        k++;
+    }
 };

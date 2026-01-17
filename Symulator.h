@@ -59,7 +59,7 @@ public:
     void setPID_T(double t) { pid.setT(t); }
     void setPID_TypCalki(RegulatorPID::LiczCalk typ) { pid.setLiczCalk(typ); }
 
-    // ARX - POPRAWNIE
+    // ARX
     void setARX(const std::vector<double>& a,
                 const std::vector<double>& b,
                 int opoznienie,

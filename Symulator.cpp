@@ -1,6 +1,6 @@
 #include "Symulator.h"
 
-//KONSTRUKTOR
+// KONSTRUKTOR
 SymulatorUAR::SymulatorUAR(const GeneratorSygnalu& gen,
                            const RegulatorPID& pid_,
                            const ModelARX& arx_,
@@ -15,14 +15,15 @@ SymulatorUAR::SymulatorUAR(const GeneratorSygnalu& gen,
       w(0.0),
       e(0.0),
       u(0.0),
-      y(0.0)
+      y(0.0),
+      interwalMs(200)
 {
-    timer.setInterwal(200);
+    timer.setInterval(interwalMs);
     connect(&timer, &QTimer::timeout,
             this, &SymulatorUAR::Tick);
 }
 
-//ZEGAR
+// ZEGAR
 void SymulatorUAR::Tick()
 {
     if (!symuluj)
@@ -32,27 +33,22 @@ void SymulatorUAR::Tick()
     k++;
 }
 
-//START
+// START
 void SymulatorUAR::start()
 {
     symuluj = true;
     if (!timer.isActive())
         timer.start();
 }
-//STOP
+
+// STOP
 void SymulatorUAR::stop()
 {
     symuluj = false;
+    timer.stop();
 }
 
-//INTERWAL
-void SymulatorUAR::setInterwal(int ms)
-{
-    if (ms < 1) ms = 1;
-    timer.setInterwal(ms);
-}
-
-//RESET
+// RESET
 void SymulatorUAR::reset()
 {
     stop();

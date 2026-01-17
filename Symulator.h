@@ -1,12 +1,17 @@
 #pragma once
 
+#include <QObject>
+#include <QTimer>
+#include <vector>
 #include "GeneratorSygnalu.h"
 #include "RegulatorPID.h"
 #include "ModelARX.h"
 #include "ProstyUAR.h"
 
-class SymulatorUAR
+class SymulatorUAR : public QObject
 {
+    Q_OBJECT
+
 private:
     // WARSTWA DANYCH
     GeneratorSygnalu generator;
@@ -21,48 +26,69 @@ private:
     // ZEGAR
     bool symuluj;
     int interwalMs;
+    QTimer timer;
 
 public:
-    //KONSTRUKTOR
+    // KONSTRUKTOR
     SymulatorUAR(const GeneratorSygnalu& gen,
                  const RegulatorPID& pid,
-                 const ModelARX& arx);
+                 const ModelARX& arx,
+                 QObject* parent = nullptr);
 
-    //STEROWANIE SYMULACJĄ
+    // STEROWANIE SYMULACJĄ
     void start();
     void stop();
     void reset();
-    void krokSymulacji();
 
-    //USTAWIENIA GENERATORA
-    void setGeneratorTryb(GeneratorSygnalu::Tryb t);
-    void setGeneratorA(double a);
-    void setGeneratorS(double s);
-    void setGeneratorP(double p);
-    void setGeneratorCzestotliwosc(double f);
-    void setGeneratorTT(int tt);
+    // Generator
+    void setGeneratorTryb(GeneratorSygnalu::Tryb t) { generator.ustawTryb(t); }
+    void setGeneratorA(double a) { generator.ustawA(a); }
+    void setGeneratorS(double s) { generator.ustawS(s); }
+    void setGeneratorP(double p) { generator.ustawP(p); }
+    void setGeneratorTRZ(double trz) { generator.ustawTRZ(trz); }
+    void setGeneratorTT(int tt) { generator.ustawTT(tt); }
 
-    //PID
-    void setPID_Kp(double kp);
-    void setPID_Ti(double ti);
-    void setPID_Td(double td);
-    void setPID_T(double t);
-    void setPID_TypCalki(RegulatorPID::LiczCalk typ);
+    void setGeneratorCzestotliwosc(double f) {
+        if (f > 0) setGeneratorTRZ(1.0 / f);
+    }
 
-    //ARX
+    // Regulator PID
+    void setPID_Kp(double kp) { pid.setKp(kp); }
+    void setPID_Ti(double ti) { pid.setStalaCalk(ti); }
+    void setPID_Td(double td) { pid.setTd(td); }
+    void setPID_T(double t) { pid.setT(t); }
+    void setPID_TypCalki(RegulatorPID::LiczCalk typ) { pid.setLiczCalk(typ); }
+
+    // ARX - POPRAWNIE
     void setARX(const std::vector<double>& a,
                 const std::vector<double>& b,
                 int opoznienie,
-                double szum);
+                double szum) {
+        arx.ustawParametry(a, b, opoznienie, szum);
+        reset();
+    }
 
-    //GETTERY DLA GUI
-    int getKrok() const;
-    double getWartoscZadana() const;
-    double getUchyb() const;
-    double getSterowanie() const;
-    double getWyjscie() const;
+    // Ręczny krok symulacji
+    void krokSymulacji()
+    {
+        uar.krok(w, e, u, y, generator, k);
+        k++;
+    }
 
-    int getInterwalMs() const;
-    void setInterwalMs(int ms);
-    bool czysymuluj() const;
+    // GETTERY
+    int getKrok() const { return k; }
+    double getWartoscZadana() const { return w; }
+    double getUchyb() const { return e; }
+    double getSterowanie() const { return u; }
+    double getWyjscie() const { return y; }
+    int getInterwalMs() const { return interwalMs; }
+    void setInterwalMs(int ms) {
+        if (ms < 1) ms = 1;
+        interwalMs = ms;
+        timer.setInterval(ms);
+    }
+    bool czysymuluj() const { return symuluj; }
+
+private slots:
+    void Tick();
 };

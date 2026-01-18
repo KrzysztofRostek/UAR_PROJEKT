@@ -1,32 +1,37 @@
 #pragma once
 
+#include "GeneratorSygnalu.h"
 #include "ModelARX.h"
 #include "RegulatorPID.h"
-#include "GeneratorSygnalu.h"
 
 class ProstyUAR
 {
 private:
-    ModelARX& obiekt;//referemcka dp ARX
-    RegulatorPID& pid;//referencja do PID
+    ModelARX &obiekt;  //referemcka dp ARX
+    RegulatorPID &pid; //referencja do PID
 
-    double wartwyjsc_poprzedni;   //poprzednie wyjście y(k-1)
+    double wartwyjsc_poprzedni; //poprzednie wyjście y(k-1)
 
 public:
-
-    ProstyUAR(ModelARX& arx, RegulatorPID& pid)  // Konstruktor
-        : obiekt(arx), pid(pid), wartwyjsc_poprzedni(0.0)
+    ProstyUAR(ModelARX &arx, RegulatorPID &pid) // Konstruktor
+        : obiekt(arx)
+        , pid(pid)
+        , wartwyjsc_poprzedni(0.0)
     {}
 
-
-    void reset()//reset
+    void reset() //reset
     {
         wartwyjsc_poprzedni = 0.0;
         pid.reset();
         obiekt.reset();
     }
 
-    void krok(double& generator, double& uchyb, double& PID, double& WartWyjsc, GeneratorSygnalu& gen, int k)
+    void krok(double &generator,
+              double &uchyb,
+              double &PID,
+              double &WartWyjsc,
+              GeneratorSygnalu &gen,
+              int k)
     {
         // 1. wartość zadana
         generator = gen.generuj(k);
@@ -36,6 +41,13 @@ public:
 
         // 3. regulator
         PID = pid.symuluj(uchyb);
+      const double MAX_STEROWANIE =100.0;
+        if(PID>MAX_STEROWANIE){
+            PID = MAX_STEROWANIE;
+        }
+        if(PID <-MAX_STEROWANIE){
+            PID = -MAX_STEROWANIE;
+        }
 
         // 4. obiekt ARX
         WartWyjsc = obiekt.symuluj(PID);
@@ -45,14 +57,16 @@ public:
     }
     double symuluj(double wartosczadana)
     {
-        double uchyb = wartosczadana - wartwyjsc_poprzedni;//obliczamy różnice między zawrtością zadaną a poprzednim wyjściem obiektu
+        double uchyb
+            = wartosczadana
+              - wartwyjsc_poprzedni; //obliczamy różnice między zawrtością zadaną a poprzednim wyjściem obiektu
 
-        double PID = pid.symuluj(uchyb);//podajemy uchyb na regulatora PID
+        double PID = pid.symuluj(uchyb); //podajemy uchyb na regulatora PID
 
-        double WartWyjsc = obiekt.symuluj(PID);//podajemy sygnał sterujący do ModeluARX
+        double WartWyjsc = obiekt.symuluj(PID); //podajemy sygnał sterujący do ModeluARX
 
-        wartwyjsc_poprzedni = WartWyjsc;//zapisujemy wyjście do obliczeń uchybu
+        wartwyjsc_poprzedni = WartWyjsc; //zapisujemy wyjście do obliczeń uchybu
 
-        return WartWyjsc;//zwracamy wartość
+        return WartWyjsc; //zwracamy wartość
     }
 };

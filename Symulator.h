@@ -35,17 +35,17 @@ public:
                  const ModelARX& arx_,
                  QObject* parent = nullptr)
         : QObject(parent),
-          generator(gen),
-          pid(pid_),
-          arx(arx_),
-          uar(arx, pid),
-          symuluj(false),
-          k(0),
-          w(0.0),
-          e(0.0),
-          u(0.0),
-          y(0.0),
-          interwalMs(200)
+        generator(gen),
+        pid(pid_),
+        arx(arx_),
+        uar(arx, pid),
+        symuluj(false),
+        k(0),
+        w(0.0),
+        e(0.0),
+        u(0.0),
+        y(0.0),
+        interwalMs(200)
     {
         timer.setInterval(interwalMs);
         connect(&timer, &QTimer::timeout,
@@ -129,12 +129,27 @@ public:
     }
 
     bool czysymuluj() const { return symuluj; }
+    double getP() const {return pid.P;}
+    double getI() const {return pid.I;}
+    double getD() const {return pid.D;}
+
+
+signals:
+    void krokWykonany(double w, double y, double e, double u, int k,double P,double I,double D);
 
 private slots:
     void Tick()
     {
         if (!symuluj) return;
         uar.krok(w, e, u, y, generator, k);
+
+        double wartP=getP();
+        double wartI=getI();
+        double wartD=getD();
+
+        emit krokWykonany(w, y, e, u, k,wartP,wartI,wartD); //emitujemy dane
+
         k++;
     }
 };
+

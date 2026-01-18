@@ -374,7 +374,7 @@ public:
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName("menubar");
-        menubar->setGeometry(QRect(0, 0, 1485, 22));
+        menubar->setGeometry(QRect(0, 0, 1485, 21));
         menuUAR = new QMenu(menubar);
         menuUAR->setObjectName("menuUAR");
         MainWindow->setMenuBar(menubar);

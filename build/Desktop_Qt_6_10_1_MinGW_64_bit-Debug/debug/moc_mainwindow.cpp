@@ -63,7 +63,8 @@ template <> constexpr inline auto MainWindow::qt_create_metaobjectdata<qt_meta_t
         "szum",
         "on_STOP_Bttun_clicked",
         "on_RESET_Button_clicked",
-        "on_TEST_BUTTON_clicked"
+        "on_Zapisz_Button_clicked",
+        "on_Wczytaj_Button_clicked"
     };
 
     QtMocHelpers::UintData qt_methods {
@@ -107,8 +108,10 @@ template <> constexpr inline auto MainWindow::qt_create_metaobjectdata<qt_meta_t
         QtMocHelpers::SlotData<void()>(23, 2, QMC::AccessPrivate, QMetaType::Void),
         // Slot 'on_RESET_Button_clicked'
         QtMocHelpers::SlotData<void()>(24, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'on_TEST_BUTTON_clicked'
+        // Slot 'on_Zapisz_Button_clicked'
         QtMocHelpers::SlotData<void()>(25, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'on_Wczytaj_Button_clicked'
+        QtMocHelpers::SlotData<void()>(26, 2, QMC::AccessPrivate, QMetaType::Void),
     };
     QtMocHelpers::UintData qt_properties {
     };
@@ -149,6 +152,8 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         case 14: _t->ustawARXDane((*reinterpret_cast<std::add_pointer_t<std::vector<double>>>(_a[1])),(*reinterpret_cast<std::add_pointer_t<std::vector<double>>>(_a[2])),(*reinterpret_cast<std::add_pointer_t<int>>(_a[3])),(*reinterpret_cast<std::add_pointer_t<double>>(_a[4]))); break;
         case 15: _t->on_STOP_Bttun_clicked(); break;
         case 16: _t->on_RESET_Button_clicked(); break;
+        case 17: _t->on_Zapisz_Button_clicked(); break;
+        case 18: _t->on_Wczytaj_Button_clicked(); break;
         default: ;
         }
     }
@@ -173,14 +178,14 @@ int MainWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 18)
+        if (_id < 19)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 18;
+        _id -= 19;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 18)
+        if (_id < 19)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 18;
+        _id -= 19;
     }
     return _id;
 }

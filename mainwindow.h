@@ -5,9 +5,10 @@
 #include "Symulator.h"
 #include "arxwindow.h"
 #include "qvalueaxis.h"
-
+#include "MenedzerKonfiguracji.h"
 #include <QTimer>
-
+#include <QFileDialog>
+#include <QMessageBox>
 #include <QtCharts/QChart>
 #include <QtCharts/QChartView>
 #include <QtCharts/QLineSeries>
@@ -55,21 +56,22 @@ private slots:
 
     void on_Konf_ARX_Button_clicked();
 
-    void ustawARXDane(const std::vector<double>& a,
-                      const std::vector<double>& b,
+    void ustawARXDane(const std::vector<double> &a,
+                      const std::vector<double> &b,
                       int opoznienie,
                       double szum);
-
 
     void on_STOP_Bttun_clicked();
 
     void on_RESET_Button_clicked();
 
-    void on_TEST_BUTTON_clicked();
+    void on_Zapisz_Button_clicked();
+
+    void on_Wczytaj_Button_clicked();
 
 private:
     Ui::MainWindow *ui;
-
+    MenedzerKonfiguracji menedzerKonfig;
     ARXwindow *arxwindow = nullptr;
 
     SymulatorUAR symulator;
@@ -91,8 +93,19 @@ private:
     QValueAxis *regX;
     QValueAxis *regY;
 
+    QValueAxis *pidX;
+    QValueAxis *pidY;
+
 
     QTimer *timer;
     double T; // okres próbkowania [s]
+
+    void wyczyscWykresy();
+
+    std::vector<double> aktualnyWektorA;
+    std::vector<double> aktualnyWektorB;
+    int aktualneOpoznienie;
+    double aktualnySzum;
 };
+
 #endif // MAINWINDOW_H

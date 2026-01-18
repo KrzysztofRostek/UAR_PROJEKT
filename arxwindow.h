@@ -16,9 +16,13 @@ public:
     explicit ARXwindow(QWidget *parent = nullptr);
     ~ARXwindow();
 
+    void ustawDane(const std::vector<double>& wektorA,
+                   const std::vector<double>& wektorB,
+                   int opoznienie,
+                   double sigma);
 signals:
-    void zatwierdzonoARX(const std::vector<double>& a,
-                         const std::vector<double>& b,
+    void zatwierdzonoARX(const std::vector<double> &a,
+                         const std::vector<double> &b,
                          int opoznienie,
                          double szum);
 private slots:

@@ -1,0 +1,28 @@
+{
+    "arx": {
+        "odchylenie": 1,
+        "opoznienie": 1,
+        "wektorA": [
+            1
+        ],
+        "wektorB": [
+            1
+        ]
+    },
+    "data": "Sun Jan 18 23:53:49 2026",
+    "generator": {
+        "amplituda": 1,
+        "czestotliwosc": 1,
+        "skladowaStala": 0,
+        "tryb": 1,
+        "wypelnienie": 0.5
+    },
+    "interwalMs": 200,
+    "pid": {
+        "Kp": 1,
+        "Td": 1,
+        "Ti": 1,
+        "typCalki": 0
+    },
+    "wersja": "1.0"
+}

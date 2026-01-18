@@ -1,26 +1,25 @@
 #include "Symulator.h"
 
 // KONSTRUKTOR
-SymulatorUAR::SymulatorUAR(const GeneratorSygnalu& gen,
-                           const RegulatorPID& pid_,
-                           const ModelARX& arx_,
-                           QObject* parent)
-    : QObject(parent),
-    generator(gen),
-    pid(pid_),
-    arx(arx_),
-    uar(arx, pid),
-    symuluj(false),
-    k(0),
-    w(0.0),
-    e(0.0),
-    u(0.0),
-    y(0.0),
-    interwalMs(200)
+SymulatorUAR::SymulatorUAR(const GeneratorSygnalu &gen,
+                           const RegulatorPID &pid_,
+                           const ModelARX &arx_,
+                           QObject *parent)
+    : QObject(parent)
+    , generator(gen)
+    , pid(pid_)
+    , arx(arx_)
+    , uar(arx, pid)
+    , symuluj(false)
+    , k(0)
+    , w(0.0)
+    , e(0.0)
+    , u(0.0)
+    , y(0.0)
+    , interwalMs(200)
 {
     timer.setInterval(interwalMs);
-    connect(&timer, &QTimer::timeout,
-            this, &SymulatorUAR::Tick);
+    connect(&timer, &QTimer::timeout, this, &SymulatorUAR::Tick);
 }
 
 // ZEGAR

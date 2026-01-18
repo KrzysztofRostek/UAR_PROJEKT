@@ -2,11 +2,11 @@
 
 #include <QObject>
 #include <QTimer>
-#include <vector>
 #include "GeneratorSygnalu.h"
-#include "RegulatorPID.h"
 #include "ModelARX.h"
 #include "ProstyUAR.h"
+#include "RegulatorPID.h"
+#include <vector>
 
 class SymulatorUAR : public QObject
 {
@@ -30,26 +30,25 @@ private:
 
 public:
     // KONSTRUKTOR - INLINE
-    SymulatorUAR(const GeneratorSygnalu& gen,
-                 const RegulatorPID& pid_,
-                 const ModelARX& arx_,
-                 QObject* parent = nullptr)
-        : QObject(parent),
-        generator(gen),
-        pid(pid_),
-        arx(arx_),
-        uar(arx, pid),
-        symuluj(false),
-        k(0),
-        w(0.0),
-        e(0.0),
-        u(0.0),
-        y(0.0),
-        interwalMs(200)
+    SymulatorUAR(const GeneratorSygnalu &gen,
+                 const RegulatorPID &pid_,
+                 const ModelARX &arx_,
+                 QObject *parent = nullptr)
+        : QObject(parent)
+        , generator(gen)
+        , pid(pid_)
+        , arx(arx_)
+        , uar(arx, pid)
+        , symuluj(false)
+        , k(0)
+        , w(0.0)
+        , e(0.0)
+        , u(0.0)
+        , y(0.0)
+        , interwalMs(200)
     {
         timer.setInterval(interwalMs);
-        connect(&timer, &QTimer::timeout,
-                this, &SymulatorUAR::Tick);
+        connect(&timer, &QTimer::timeout, this, &SymulatorUAR::Tick);
     }
 
     // STEROWANIE SYMULACJĄ
@@ -82,8 +81,10 @@ public:
     void setGeneratorTRZ(double trz) { generator.ustawTRZ(trz); }
     void setGeneratorTT(int tt) { generator.ustawTT(tt); }
 
-    void setGeneratorCzestotliwosc(double f) {
-        if (f > 0) setGeneratorTRZ(1.0 / f);
+    void setGeneratorCzestotliwosc(double f)
+    {
+        if (f > 0)
+            setGeneratorTRZ(1.0 / f);
     }
 
     // Regulator PID
@@ -94,8 +95,8 @@ public:
     void setPID_TypCalki(RegulatorPID::LiczCalk typ) { pid.setLiczCalk(typ); }
 
     // ARX
-    void setARX(const std::vector<double>& a,
-                const std::vector<double>& b,
+    void setARX(const std::vector<double> &a,
+                const std::vector<double> &b,
                 int opoznienie,
                 double szum)
     {
@@ -106,8 +107,7 @@ public:
     // Ręczny krok symulacji
     void krokSymulacji()
     {
-        if (symuluj)
-        {
+        if (symuluj) {
             uar.krok(w, e, u, y, generator, k);
             k++;
         }
@@ -123,33 +123,33 @@ public:
     int getInterwalMs() const { return interwalMs; }
     void setInterwalMs(int ms)
     {
-        if (ms < 1) ms = 1;
+        if (ms < 1)
+            ms = 1;
         interwalMs = ms;
         timer.setInterval(ms);
     }
 
     bool czysymuluj() const { return symuluj; }
-    double getP() const {return pid.P;}
-    double getI() const {return pid.I;}
-    double getD() const {return pid.D;}
-
+    double getP() const { return pid.P; }
+    double getI() const { return pid.I; }
+    double getD() const { return pid.D; }
 
 signals:
-    void krokWykonany(double w, double y, double e, double u, int k,double P,double I,double D);
+    void krokWykonany(double w, double y, double e, double u, int k, double P, double I, double D);
 
 private slots:
     void Tick()
     {
-        if (!symuluj) return;
+        if (!symuluj)
+            return;
         uar.krok(w, e, u, y, generator, k);
 
-        double wartP=getP();
-        double wartI=getI();
-        double wartD=getD();
+        double wartP = getP();
+        double wartI = getI();
+        double wartD = getD();
 
-        emit krokWykonany(w, y, e, u, k,wartP,wartI,wartD); //emitujemy dane
+        emit krokWykonany(w, y, e, u, k, wartP, wartI, wartD); //emitujemy dane
 
         k++;
     }
 };
-

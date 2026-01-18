@@ -3,7 +3,8 @@
 #include "arxwindow.h"
 #include "qvalueaxis.h"
 #include "ui_mainwindow.h"
-
+#include <QFileDialog>
+#include <QMessageBox>
 #include <QtCharts/QChart>
 #include <QtCharts/QChartView>
 #include <QtCharts/QLineSeries>
@@ -14,13 +15,17 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 
-    , symulator(GeneratorSygnalu(), RegulatorPID(), ModelARX({0.5}, {0.5}))
-
+    , symulator(GeneratorSygnalu(), RegulatorPID(), ModelARX({0}, {0}))
+    , aktualnyWektorA({0})
+    , aktualnyWektorB({0})
+    , aktualneOpoznienie(1)
+    , aktualnySzum(0.0)
 {
     ui->setupUi(this);
     this->showMaximized();
 
 
+    //----Serie----//
     seriaP = new QLineSeries();
     seriaI = new QLineSeries();
     seriaD = new QLineSeries();
@@ -29,78 +34,101 @@ MainWindow::MainWindow(QWidget *parent)
     seriaRegulator = new QLineSeries();
     seriaZad = new QLineSeries();
     seriaRegulowana = new QLineSeries();
+    //----Tytuły----//
+    seriaZad->setName("Wartość zadana");
+    seriaRegulowana->setName("Wartość regulowana");
+
+    seriaP->setName("P");
+    seriaI->setName("I");
+    seriaD->setName("D");
+
+    seriaUchyb->setName("Uchyb");
+    seriaRegulator->setName("Sterowanie u");
+
+
 
     //----MAIN----//
     QChart *Mainchart = new QChart();
     QChartView *MainchartView = new QChartView(Mainchart);
 
-    connect(&symulator, &SymulatorUAR::krokWykonany,
-            this, [=](double w, double y, double e, double u,
-                int k){
+    connect(&symulator,
+            &SymulatorUAR::krokWykonany,
+            this,
+            [=](double w, double y, double e, double u,
+                int k, double P, double I, double D)
+            {
                 double t = k * symulator.getInterwalMs() / 1000.0;
+                double windowTime = 10.0;
 
-        // ---- Mainchart ----
-        seriaZad->append(t, w);
-        seriaRegulowana->append(t, y);
+                // ==== MAIN CHART ====
+                seriaZad->append(t, w);
+                seriaRegulowana->append(t, y);
 
-        double minY = std::min(seriaZad->points().first().y(), seriaRegulowana->points().first().y());
-        double maxY = std::max(seriaZad->points().first().y(), seriaRegulowana->points().first().y());
+                double minY = w, maxY = w;
+                for (const QPointF &p : seriaZad->points()) {
+                    minY = std::min(minY, p.y());
+                    maxY = std::max(maxY, p.y());
+                }
+                for (const QPointF &p : seriaRegulowana->points()) {
+                    minY = std::min(minY, p.y());
+                    maxY = std::max(maxY, p.y());
+                }
 
-        for (auto &p : seriaZad->points()) {
-            if (p.y() < minY) minY = p.y();
-            if (p.y() > maxY) maxY = p.y();
-        }
-        for (auto &p : seriaRegulowana->points()) {
-            if (p.y() < minY) minY = p.y();
-            if (p.y() > maxY) maxY = p.y();
-        }
+                double margin = (maxY - minY) * 0.1;
+                if (margin < 1e-6) margin = 1.0;
+                mainY->setRange(minY - margin, maxY + margin);
+                mainX->setRange(t > windowTime ? t - windowTime : 0, t);
 
-        double margin = (maxY - minY) * 0.1;
-        if (margin < 1e-6) margin = 1.0;
-        mainY->setRange(minY - margin, maxY + margin);
+                // ==== PID CHART ====
+                seriaP->append(t, P);
+                seriaI->append(t, I);
+                seriaD->append(t, D);
 
-        double window = 10.0;
-        if (t > window)
-            mainX->setRange(t - window, t);
-        else
-            mainX->setRange(0, window);
+                double minPID = P, maxPID = P;
+                auto pidMinMax = [&](QLineSeries *s) {
+                    for (const QPointF &pt : s->points()) {
+                        minPID = std::min(minPID, pt.y());
+                        maxPID = std::max(maxPID, pt.y());
+                    }
+                };
 
-        // ---- Uchybchart ----
-        seriaUchyb->append(t, e);
+                pidMinMax(seriaP);
+                pidMinMax(seriaI);
+                pidMinMax(seriaD);
 
-        double minUchyb = e;
-        double maxUchyb = e;
+                double pidMargin = (maxPID - minPID) * 0.1;
+                if (pidMargin < 1e-6) pidMargin = 1.0;
+                pidY->setRange(minPID - pidMargin, maxPID + pidMargin);
+                pidX->setRange(t > windowTime ? t - windowTime : 0, t);
 
-        for (auto &p : seriaUchyb->points()) {
-            if (p.y() < minUchyb) minUchyb = p.y();
-            if (p.y() > maxUchyb) maxUchyb = p.y();
-        }
+                // ==== UCHYB ====
+                seriaUchyb->append(t, e);
 
-        double marginU = (maxUchyb - minUchyb) * 0.1;
-        if (marginU < 1e-6) marginU = 1.0;
+                double minE = e, maxE = e;
+                for (const QPointF &p : seriaUchyb->points()) {
+                    minE = std::min(minE, p.y());
+                    maxE = std::max(maxE, p.y());
+                }
 
-        // załóżmy, że masz w klasie MainWindow uchybX i uchybY
-        uchybY->setRange(minUchyb - marginU, maxUchyb + marginU);
-        uchybX->setRange(t > window ? t - window : 0, t);
+                double eMargin = (maxE - minE) * 0.1;
+                if (eMargin < 1e-6) eMargin = 1.0;
+                uchybY->setRange(minE - eMargin, maxE + eMargin);
+                uchybX->setRange(t > windowTime ? t - windowTime : 0, t);
 
-        // ---- Regulatorchart ----
-        seriaRegulator->append(t, u);
+                // ==== REGULATOR ====
+                seriaRegulator->append(t, u);
 
-        double minReg = u;
-        double maxReg = u;
+                double minU = u, maxU = u;
+                for (const QPointF &p : seriaRegulator->points()) {
+                    minU = std::min(minU, p.y());
+                    maxU = std::max(maxU, p.y());
+                }
 
-        for (auto &p : seriaRegulator->points()) {
-            if (p.y() < minReg) minReg = p.y();
-            if (p.y() > maxReg) maxReg = p.y();
-        }
-
-        double marginR = (maxReg - minReg) * 0.1;
-        if (marginR < 1e-6) marginR = 1.0;
-
-        // zakładam, że masz regX i regY jako osie dla wykresu Regulator
-        regY->setRange(minReg - marginR, maxReg + marginR);
-        regX->setRange(t > window ? t - window : 0, t);
-    });
+                double uMargin = (maxU - minU) * 0.1;
+                if (uMargin < 1e-6) uMargin = 1.0;
+                regY->setRange(minU - uMargin, maxU + uMargin);
+                regX->setRange(t > windowTime ? t - windowTime : 0, t);
+            });
 
     MainchartView->setMinimumSize(600, 400);
 
@@ -114,8 +142,13 @@ MainWindow::MainWindow(QWidget *parent)
     mainX->setTitleText("Czas [s]");
     mainY->setTitleText("Wartość");
 
+    mainX->setTickCount(11);
+
     Mainchart->addAxis(mainX, Qt::AlignBottom);
     Mainchart->addAxis(mainY, Qt::AlignLeft);
+
+    MainchartView->setRenderHint(QPainter::Antialiasing);
+    Mainchart->setAnimationOptions(QChart::SeriesAnimations);
 
     seriaZad->attachAxis(mainX);
     seriaZad->attachAxis(mainY);
@@ -128,31 +161,30 @@ MainWindow::MainWindow(QWidget *parent)
     QChart *PIDchart = new QChart();
     QChartView *PIDchartView = new QChartView(PIDchart);
 
-
-
-
     PIDchart->addSeries(seriaP);
     PIDchart->addSeries(seriaI);
     PIDchart->addSeries(seriaD);
     PIDchart->setTitle("Sładowe Sterowania PID");
 
-    QValueAxis *axisX = new QValueAxis();
-    QValueAxis *axisY = new QValueAxis();
+    pidX = new QValueAxis();
+    pidY = new QValueAxis();
 
-    axisX->setTitleText("Czas [s]");
-    axisY->setTitleText("Wartość");
+    pidX->setTitleText("Czas [s]");
+    pidY->setTitleText("Wartość");
 
-    PIDchart->addAxis(axisX, Qt::AlignBottom);
-    PIDchart->addAxis(axisY, Qt::AlignLeft);
+    PIDchart->addAxis(pidX, Qt::AlignBottom);
+    PIDchart->addAxis(pidY, Qt::AlignLeft);
 
-    seriaP->attachAxis(axisX);
-    seriaP->attachAxis(axisY);
-    seriaI->attachAxis(axisX);
-    seriaI->attachAxis(axisY);
-    seriaD->attachAxis(axisX);
-    seriaD->attachAxis(axisY);
+    PIDchartView->setRenderHint(QPainter::Antialiasing);
+    PIDchart->setAnimationOptions(QChart::SeriesAnimations);
+
+    seriaP->attachAxis(pidX);
+    seriaP->attachAxis(pidY);
+    seriaI->attachAxis(pidX);
+    seriaI->attachAxis(pidY);
+    seriaD->attachAxis(pidX);
+    seriaD->attachAxis(pidY);
     ui->horizontalLayout_4->addWidget(PIDchartView, 1);
-
 
     //----Uchyb----//
 
@@ -169,6 +201,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     Uchybchart->addAxis(uchybX, Qt::AlignBottom);
     Uchybchart->addAxis(uchybY, Qt::AlignLeft);
+
+    UchybchartView->setRenderHint(QPainter::Antialiasing);
+    Uchybchart->setAnimationOptions(QChart::SeriesAnimations);
 
     seriaUchyb->attachAxis(uchybX);
     seriaUchyb->attachAxis(uchybY);
@@ -190,6 +225,9 @@ MainWindow::MainWindow(QWidget *parent)
     Regulatorchart->addAxis(regX, Qt::AlignBottom);
     Regulatorchart->addAxis(regY, Qt::AlignLeft);
 
+    RegulatorchartView->setRenderHint(QPainter::Antialiasing);
+    Regulatorchart->setAnimationOptions(QChart::SeriesAnimations);
+
     seriaRegulator->attachAxis(regX);
     seriaRegulator->attachAxis(regY);
 
@@ -197,12 +235,42 @@ MainWindow::MainWindow(QWidget *parent)
     RegulatorchartView->setMinimumSize(0, 300);
 }
 
+void MainWindow::wyczyscWykresy()
+{
+    // MAIN
+    seriaZad->clear();
+    seriaRegulowana->clear();
+
+    // PID
+    seriaP->clear();
+    seriaI->clear();
+    seriaD->clear();
+
+    // UCHYB
+    seriaUchyb->clear();
+
+    // REGULATOR
+    seriaRegulator->clear();
+
+    // Reset osi
+    mainX->setRange(0, 10);
+    mainY->setRange(-1, 1);
+
+    pidX->setRange(0, 10);
+    pidY->setRange(-1, 1);
+
+    uchybX->setRange(0, 10);
+    uchybY->setRange(-1, 1);
+
+    regX->setRange(0, 10);
+    regY->setRange(-1, 1);
+}
+
+
 MainWindow::~MainWindow()
 {
     delete ui;
 }
-
-
 
 void MainWindow::on_Sin_Button_clicked()
 {
@@ -217,31 +285,57 @@ void MainWindow::on_Square_Button_clicked()
 void MainWindow::on_spinBOX_WzmocK_editingFinished()
 {
     symulator.setPID_Kp(ui->spinBOX_WzmocK->value());
+    ui->spinBOX_WzmocK->setMinimum(0.0);
+    ui->spinBOX_WzmocK->setMaximum(1000.0);
+    ui->spinBOX_WzmocK->setSingleStep(0.1);
+    ui->spinBOX_WzmocK->setDecimals(4);
 }
 
 void MainWindow::on_spinBOX_Amplituda_editingFinished()
 {
     symulator.setGeneratorA(ui->spinBOX_Amplituda->value());
+    ui->spinBOX_Amplituda->setMinimum(0.0);
+    ui->spinBOX_Amplituda->setMaximum(1000.0);
+    ui->spinBOX_Amplituda->setSingleStep(0.1);
+    ui->spinBOX_Amplituda->setDecimals(4);
 }
 
 void MainWindow::on_spinBOX_Czstotliwosc_editingFinished()
 {
     symulator.setGeneratorTRZ(ui->spinBOX_Czstotliwosc->value());
+    ui->spinBOX_Czstotliwosc->setMinimum(0.01);
+    ui->spinBOX_Czstotliwosc->setMaximum(1000.0);
+    ui->spinBOX_Czstotliwosc->setSingleStep(0.01);
+    ui->spinBOX_Czstotliwosc->setDecimals(4);
 }
 
 void MainWindow::on_spinBOX_Td_editingFinished()
 {
     symulator.setPID_Td(ui->spinBOX_Td->value());
+    ui->spinBOX_Td->setMinimum(0.0);
+    ui->spinBOX_Td->setMaximum(1000.0);
+    ui->spinBOX_Td->setSingleStep(0.1);
+    ui->spinBOX_Td->setDecimals(4);
 }
 
 void MainWindow::on_spinBOX_Ti_editingFinished()
 {
     symulator.setPID_Ti(ui->spinBOX_Ti->value());
+    ui->spinBOX_Ti->setMinimum(0.0);
+    ui->spinBOX_Ti->setMaximum(1000.0);
+    ui->spinBOX_Ti->setSingleStep(0.1);
+    ui->spinBOX_Ti->setDecimals(4);
 }
 
 void MainWindow::on_spinBOX_Interwal_editingFinished()
 {
     symulator.setGeneratorTT(ui->spinBOX_Interwal->value());
+    ui->spinBOX_Interwal->setMinimum(1);
+    ui->spinBOX_Interwal->setMaximum(9999);
+    ui->spinBOX_Interwal->setSingleStep(1);
+    ui->spinBOX_Interwal->setDecimals(4);
+
+
 }
 
 void MainWindow::on_radio_przed_toggled(bool checked)
@@ -279,16 +373,37 @@ void MainWindow::on_STOP_Bttun_clicked()
 void MainWindow::on_RESET_Button_clicked()
 {
     symulator.reset();
+
+    ui->spinBOX_WzmocK->setValue(0);
+    ui->spinBOX_Ti->setValue(0);
+    ui->spinBOX_Td->setValue(0);
+    ui->spinBOX_Amplituda->setValue(0);
+    ui->spinBOX_Czstotliwosc->setValue(0);
+    ui->spinBOX_Interwal->setValue(200);
+
+
+    ui->radio_przed->setChecked(false);
+    ui->radio_pod->setChecked(false);
+    aktualnyWektorA = {0};
+    aktualnyWektorB = {0};
+    aktualneOpoznienie = 1;
+    aktualnySzum = 0.0;
+
+
+    symulator.setARX(aktualnyWektorA, aktualnyWektorB, aktualneOpoznienie, aktualnySzum);
+    wyczyscWykresy();
 }
 
-void MainWindow::ustawARXDane(const std::vector<double>& a,
-                              const std::vector<double>& b,
+void MainWindow::ustawARXDane(const std::vector<double> &a,
+                              const std::vector<double> &b,
                               int opoznienie,
                               double szum)
 {
-
-        symulator.setARX(a, b, opoznienie, szum);
-
+    aktualnyWektorA = a;
+    aktualnyWektorB = b;
+    aktualneOpoznienie = opoznienie;
+    aktualnySzum = szum;
+    symulator.setARX(a, b, opoznienie, szum);
 }
 
 void MainWindow::on_Konf_ARX_Button_clicked()
@@ -296,11 +411,92 @@ void MainWindow::on_Konf_ARX_Button_clicked()
     if (!arxwindow) {
         arxwindow = new ARXwindow(this);
     }
-    connect(arxwindow, &ARXwindow::zatwierdzonoARX,
-            this, &MainWindow::ustawARXDane);
-
+    connect(arxwindow, &ARXwindow::zatwierdzonoARX, this, &MainWindow::ustawARXDane);
+    arxwindow->ustawDane(aktualnyWektorA, aktualnyWektorB, aktualneOpoznienie, aktualnySzum);
     arxwindow->show();
     arxwindow->raise();
     arxwindow->activateWindow();
+}
+
+void MainWindow::on_Zapisz_Button_clicked()
+{
+    QString sciezka = QFileDialog::getSaveFileName(this, "Zapisz konfigurację",
+                                                   "", "JSON (*.json)");
+    if (sciezka.isEmpty()) return;
+    bool sukces = menedzerKonfig.zapiszKonfiguracje(
+        sciezka,
+        aktualnyWektorA, aktualnyWektorB, aktualneOpoznienie, aktualnySzum,
+        ui->spinBOX_WzmocK->value(), ui->spinBOX_Ti->value(),
+        ui->spinBOX_Td->value(), ui->radio_przed->isChecked() ? 0 : 1,
+        ui->Sin_Button->isChecked() ? 0 : 1,
+        ui->spinBOX_Amplituda->value(),
+        ui->spinBOX_Czstotliwosc->value(),
+        ui->spinBOX_Interwal->value()
+        );
+
+    if (sukces) {
+        QMessageBox::information(this ,"sukces", "konfiguracja zapisana");
+    } else {
+        QMessageBox::warning(this, "blad", "nie udało sie zapisac");
+    }
+}
+
+void MainWindow::on_Wczytaj_Button_clicked()
+{
+    QString sciezka = QFileDialog::getOpenFileName(this, "Wczytaj konfigurację",
+                                                   "", "JSON (*.json)");
+    if (sciezka.isEmpty()) return;
+
+    std::vector<double> a, b;
+    int opoznienie;
+    double odchylenie, Kp, Ti, Td;
+    int typCalki, trybGeneratora;
+    double amplituda, skladowaStala, czestotliwosc, wypelnienie;
+    int interwalMs;
+
+    bool sukces = menedzerKonfig.wczytajKonfiguracje(
+        sciezka,
+        a, b, opoznienie, odchylenie,
+        Kp, Ti, Td, typCalki,
+        trybGeneratora, amplituda, czestotliwosc,
+        interwalMs
+        );
+
+    if (sukces) {
+        aktualnyWektorA = a;
+        aktualnyWektorB = b;
+        aktualneOpoznienie = opoznienie;
+        aktualnySzum = odchylenie;
+
+        symulator.setARX(a, b, opoznienie, odchylenie);
+
+        ui->spinBOX_WzmocK->setValue(Kp);
+        ui->spinBOX_Ti->setValue(Ti);
+        ui->spinBOX_Td->setValue(Td);
+
+        if (typCalki == 0) {
+            ui->radio_przed->setChecked(true);
+            ui->radio_pod->setChecked(false);
+        } else {
+            ui->radio_przed->setChecked(false);
+            ui->radio_pod->setChecked(true);
+        }
+
+        if (trybGeneratora == 0) {
+            ui->Sin_Button->setChecked(true);
+            ui->Square_Button->setChecked(false);
+        } else {
+            ui->Sin_Button->setChecked(false);
+            ui->Square_Button->setChecked(true);
+        }
+
+        ui->spinBOX_Amplituda->setValue(amplituda);
+        ui->spinBOX_Czstotliwosc->setValue(czestotliwosc);
+        ui->spinBOX_Interwal->setValue(interwalMs);
+
+        QMessageBox::information(this, "sukces", "konfiguracja wczytana");
+    } else {
+        QMessageBox::warning(this, "blad", "nie udało sie wczytac");
+    }
 }
 

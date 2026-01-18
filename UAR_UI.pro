@@ -15,6 +15,7 @@ SOURCES += \
 
 HEADERS += \
     GeneratorSygnalu.h \
+    MenedzerKonfiguracji.h \
     ModelARX.h \
     ProstyUAR.h \
     RegulatorPID.h \

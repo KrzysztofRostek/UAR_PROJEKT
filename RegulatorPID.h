@@ -20,15 +20,22 @@ private:
     static constexpr double EPS = 1e-12; //stała do porównań z zerem
 
 public:
-    double P;  // Składnik proporcjonalny
-    double I;  // Składnik całkujący
-    double D;  // Składnik różniczkujący
+    double P; // Składnik proporcjonalny
+    double I; // Składnik całkujący
+    double D; // Składnik różniczkujący
 
     RegulatorPID(double Kp_ = 1.0, double Ti_ = 0.0, double Td_ = 0.0, double T_ = 1.0)
-        : Kp(Kp_), Ti(Ti_), Td(Td_), T(T_),
-        uchyb_poprzedni(0.0), akum_wew(0.0), akum_zew(0.0),
-        typCalki(PROSTOKATNY),
-        P(0.0), I(0.0), D(0.0)
+        : Kp(Kp_)
+        , Ti(Ti_)
+        , Td(Td_)
+        , T(T_)
+        , uchyb_poprzedni(0.0)
+        , akum_wew(0.0)
+        , akum_zew(0.0)
+        , typCalki(PROSTOKATNY)
+        , P(0.0)
+        , I(0.0)
+        , D(0.0)
     {}
 
     void reset() //resetowanie uchybu,? i ?
@@ -87,7 +94,7 @@ public:
     double symuluj(double uchyb)
     {
         // --- P ---
-        P = Kp * uchyb;  // ZAPISZ do P!
+        P = Kp * uchyb; // ZAPISZ do P!
 
         // --- I ---
         I = 0.0;
@@ -118,7 +125,7 @@ public:
         }
 
         // --- D ---
-        D = 0.0;  // Resetuj D
+        D = 0.0; // Resetuj D
         if (Td > EPS) {
             D = Td * (uchyb - uchyb_poprzedni) / T;
         }

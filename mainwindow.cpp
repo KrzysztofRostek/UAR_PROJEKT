@@ -272,7 +272,16 @@ void MainWindow::on_spinBOX_Czstotliwosc_editingFinished()
     ui->spinBOX_Czstotliwosc->setSingleStep(0.01);
     ui->spinBOX_Czstotliwosc->setDecimals(5);
 }
+void MainWindow::on_SpinBox_Wypelnienie_editingFinished()
+{
+    symulator.setGeneratorP(ui->SpinBox_Wypelnienie->value());
+}
 
+
+void MainWindow::on_SpinBox_Stala_editingFinished()
+{
+    symulator.setGeneratorS(ui->SpinBox_Wypelnienie->value());
+}
 void MainWindow::on_spinBOX_Td_editingFinished()
 {
     symulator.setPID_Td(ui->spinBOX_Td->value());
@@ -473,5 +482,6 @@ void MainWindow::on_Wczytaj_Button_clicked()
         QMessageBox::warning(this, "blad", "nie udało sie wczytac");
     }
 }
+
 
 

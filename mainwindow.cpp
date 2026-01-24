@@ -272,15 +272,15 @@ void MainWindow::on_spinBOX_Czstotliwosc_editingFinished()
     ui->spinBOX_Czstotliwosc->setSingleStep(0.01);
     ui->spinBOX_Czstotliwosc->setDecimals(5);
 }
-void MainWindow::on_SpinBox_Wypelnienie_editingFinished()
+void MainWindow::on_spinBox_Wypelnienie_editingFinished()
 {
-    symulator.setGeneratorP(ui->SpinBox_Wypelnienie->value());
+    symulator.setGeneratorP(ui->spinBox_Wypelnienie->value());
 }
 
 
 void MainWindow::on_SpinBox_Stala_editingFinished()
 {
-    symulator.setGeneratorS(ui->SpinBox_Wypelnienie->value());
+    symulator.setGeneratorS(ui->SpinBox_Stala->value());
 }
 void MainWindow::on_spinBOX_Td_editingFinished()
 {
@@ -410,7 +410,7 @@ void MainWindow::on_Zapisz_Button_clicked()
         ui->Sin_Button->isChecked() ? 0 : 1,
         ui->spinBOX_Amplituda->value(),
         ui->spinBOX_Czstotliwosc->value(),
-        ui->spinBox_StalaSkladniowa->value(),
+        ui->SpinBox_Stala->value(),
         ui->spinBox_Wypelnienie->value(),
         ui->spinBOX_Interwal->value()
         );
@@ -473,8 +473,8 @@ void MainWindow::on_Wczytaj_Button_clicked()
 
         ui->spinBOX_Amplituda->setValue(amplituda);
         ui->spinBOX_Czstotliwosc->setValue(czestotliwosc);
-        ui->spinBOX_StalaSkladniowa->setValue(StalaSkladniowa);
-        ui->spinBOX_Wypelnienie->setValue(Wypelnienie);
+        ui->SpinBox_Stala->setValue(StalaSkladniowa);
+        ui->spinBox_Wypelnienie->setValue(Wypelnienie);
         ui->spinBOX_Interwal->setValue(interwalMs);
 
         QMessageBox::information(this, "sukces", "konfiguracja wczytana");

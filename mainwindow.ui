@@ -115,7 +115,7 @@
                 </widget>
                </item>
                <item>
-                <widget class="QDoubleSpinBox" name="SpinBox_Wypelnienie">
+                <widget class="QDoubleSpinBox" name="spinBox_Wypelnienie">
                  <property name="maximum">
                   <double>1000.000000000000000</double>
                  </property>

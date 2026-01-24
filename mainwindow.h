@@ -69,7 +69,7 @@ private slots:
 
     void on_Wczytaj_Button_clicked();
 
-    void on_SpinBox_Wypelnienie_editingFinished();
+    void on_spinBox_Wypelnienie_editingFinished();
 
     void on_SpinBox_Stala_editingFinished();
 

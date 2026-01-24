@@ -52,6 +52,12 @@ public:
     QHBoxLayout *horizontalLayout_7;
     QLabel *label_5;
     QDoubleSpinBox *spinBOX_WzmocK;
+    QHBoxLayout *horizontalLayout_15;
+    QLabel *label_2;
+    QDoubleSpinBox *spinBox_Wypelnienie;
+    QHBoxLayout *horizontalLayout_16;
+    QLabel *label_6;
+    QDoubleSpinBox *SpinBox_Stala;
     QSpacerItem *verticalSpacer_4;
     QGroupBox *groupBox_3;
     QVBoxLayout *verticalLayout_7;
@@ -114,6 +120,7 @@ public:
         verticalLayout_9->setObjectName("verticalLayout_9");
         groupBox = new QGroupBox(centralwidget);
         groupBox->setObjectName("groupBox");
+        groupBox->setMinimumSize(QSize(0, 0));
         groupBox->setMaximumSize(QSize(199, 16777215));
         verticalLayout_6 = new QVBoxLayout(groupBox);
         verticalLayout_6->setObjectName("verticalLayout_6");
@@ -178,6 +185,41 @@ public:
 
 
         verticalLayout->addLayout(horizontalLayout_7);
+
+        horizontalLayout_15 = new QHBoxLayout();
+        horizontalLayout_15->setObjectName("horizontalLayout_15");
+        horizontalLayout_15->setContentsMargins(-1, 0, -1, -1);
+        label_2 = new QLabel(groupBox);
+        label_2->setObjectName("label_2");
+
+        horizontalLayout_15->addWidget(label_2);
+
+        spinBox_Wypelnienie = new QDoubleSpinBox(groupBox);
+        spinBox_Wypelnienie->setObjectName("spinBox_Wypelnienie");
+        spinBox_Wypelnienie->setMaximum(1000.000000000000000);
+
+        horizontalLayout_15->addWidget(spinBox_Wypelnienie);
+
+
+        verticalLayout->addLayout(horizontalLayout_15);
+
+        horizontalLayout_16 = new QHBoxLayout();
+        horizontalLayout_16->setObjectName("horizontalLayout_16");
+        horizontalLayout_16->setContentsMargins(-1, 0, -1, -1);
+        label_6 = new QLabel(groupBox);
+        label_6->setObjectName("label_6");
+
+        horizontalLayout_16->addWidget(label_6);
+
+        SpinBox_Stala = new QDoubleSpinBox(groupBox);
+        SpinBox_Stala->setObjectName("SpinBox_Stala");
+        SpinBox_Stala->setMinimum(-1000.000000000000000);
+        SpinBox_Stala->setMaximum(1000.000000000000000);
+
+        horizontalLayout_16->addWidget(SpinBox_Stala);
+
+
+        verticalLayout->addLayout(horizontalLayout_16);
 
 
         verticalLayout_6->addLayout(verticalLayout);
@@ -398,6 +440,8 @@ public:
         label_3->setText(QCoreApplication::translate("MainWindow", "amplituda", nullptr));
         label_4->setText(QCoreApplication::translate("MainWindow", "cz\304\231stowliwosc", nullptr));
         label_5->setText(QCoreApplication::translate("MainWindow", "wzmocnienie K", nullptr));
+        label_2->setText(QCoreApplication::translate("MainWindow", "Wype\305\202nienie P", nullptr));
+        label_6->setText(QCoreApplication::translate("MainWindow", "Sta\305\202a S", nullptr));
         groupBox_3->setTitle(QCoreApplication::translate("MainWindow", "czas", nullptr));
         label_7->setText(QCoreApplication::translate("MainWindow", "r\303\263zniczkowania Td", nullptr));
         Reset_d->setText(QCoreApplication::translate("MainWindow", "RESET d", nullptr));

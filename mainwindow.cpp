@@ -252,7 +252,7 @@ void MainWindow::on_spinBOX_WzmocK_editingFinished()
     ui->spinBOX_WzmocK->setMinimum(0.0);
     ui->spinBOX_WzmocK->setMaximum(1000.0);
     ui->spinBOX_WzmocK->setSingleStep(0.1);
-    ui->spinBOX_WzmocK->setDecimals(4);
+    ui->spinBOX_WzmocK->setDecimals(5);
 }
 
 void MainWindow::on_spinBOX_Amplituda_editingFinished()
@@ -261,7 +261,7 @@ void MainWindow::on_spinBOX_Amplituda_editingFinished()
     ui->spinBOX_Amplituda->setMinimum(0.0);
     ui->spinBOX_Amplituda->setMaximum(1000.0);
     ui->spinBOX_Amplituda->setSingleStep(0.1);
-    ui->spinBOX_Amplituda->setDecimals(4);
+    ui->spinBOX_Amplituda->setDecimals(5);
 }
 
 void MainWindow::on_spinBOX_Czstotliwosc_editingFinished()
@@ -270,7 +270,7 @@ void MainWindow::on_spinBOX_Czstotliwosc_editingFinished()
     ui->spinBOX_Czstotliwosc->setMinimum(0.01);
     ui->spinBOX_Czstotliwosc->setMaximum(1000.0);
     ui->spinBOX_Czstotliwosc->setSingleStep(0.01);
-    ui->spinBOX_Czstotliwosc->setDecimals(4);
+    ui->spinBOX_Czstotliwosc->setDecimals(5);
 }
 
 void MainWindow::on_spinBOX_Td_editingFinished()
@@ -279,7 +279,7 @@ void MainWindow::on_spinBOX_Td_editingFinished()
     ui->spinBOX_Td->setMinimum(0.0);
     ui->spinBOX_Td->setMaximum(1000.0);
     ui->spinBOX_Td->setSingleStep(0.1);
-    ui->spinBOX_Td->setDecimals(4);
+    ui->spinBOX_Td->setDecimals(5);
 }
 
 void MainWindow::on_spinBOX_Ti_editingFinished()
@@ -288,7 +288,7 @@ void MainWindow::on_spinBOX_Ti_editingFinished()
     ui->spinBOX_Ti->setMinimum(0.0);
     ui->spinBOX_Ti->setMaximum(1000.0);
     ui->spinBOX_Ti->setSingleStep(0.1);
-    ui->spinBOX_Ti->setDecimals(4);
+    ui->spinBOX_Ti->setDecimals(5);
 }
 
 void MainWindow::on_spinBOX_Interwal_editingFinished()
@@ -297,7 +297,7 @@ void MainWindow::on_spinBOX_Interwal_editingFinished()
     ui->spinBOX_Interwal->setMinimum(1);
     ui->spinBOX_Interwal->setMaximum(9999);
     ui->spinBOX_Interwal->setSingleStep(1);
-    ui->spinBOX_Interwal->setDecimals(4);
+    ui->spinBOX_Interwal->setDecimals(5);
 
 
 }
@@ -395,6 +395,8 @@ void MainWindow::on_Zapisz_Button_clicked()
         ui->Sin_Button->isChecked() ? 0 : 1,
         ui->spinBOX_Amplituda->value(),
         ui->spinBOX_Czstotliwosc->value(),
+        ui->spinBox_StalaSkladniowa->value(),
+        ui->spinBox_Wypelnienie->value(),
         ui->spinBOX_Interwal->value()
         );
 
@@ -415,14 +417,14 @@ void MainWindow::on_Wczytaj_Button_clicked()
     int opoznienie;
     double odchylenie, Kp, Ti, Td;
     int typCalki, trybGeneratora;
-    double amplituda, skladowaStala, czestotliwosc, wypelnienie;
+    double amplituda, StalaSkladniowa, Wypelnienie, czestotliwosc;
     int interwalMs;
 
     bool sukces = menedzerKonfig.wczytajKonfiguracje(
         sciezka,
         a, b, opoznienie, odchylenie,
         Kp, Ti, Td, typCalki,
-        trybGeneratora, amplituda, czestotliwosc,
+        trybGeneratora, amplituda, czestotliwosc, StalaSkladniowa, Wypelnienie,
         interwalMs
         );
 
@@ -456,6 +458,8 @@ void MainWindow::on_Wczytaj_Button_clicked()
 
         ui->spinBOX_Amplituda->setValue(amplituda);
         ui->spinBOX_Czstotliwosc->setValue(czestotliwosc);
+        ui->spinBOX_StalaSkladniowa->setValue(StalaSkladniowa);
+        ui->spinBOX_Wypelnienie->setValue(Wypelnienie);
         ui->spinBOX_Interwal->setValue(interwalMs);
 
         QMessageBox::information(this, "sukces", "konfiguracja wczytana");

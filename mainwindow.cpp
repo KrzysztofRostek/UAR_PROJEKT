@@ -274,13 +274,13 @@ void MainWindow::on_spinBOX_Czstotliwosc_editingFinished()
 }
 void MainWindow::on_SpinBox_Wypelnienie_editingFinished()
 {
-    symulator.setGeneratorP(ui->SpinBOX_w->value());
+    symulator.setGeneratorP(ui->SpinBox_Wypelnienie->value());
 }
 
 
 void MainWindow::on_SpinBox_Stala_editingFinished()
 {
-    symulator.setGeneratorS(ui->SpinBox_Stala->value());
+    symulator.setGeneratorS(ui->SpinBox_Wypelnienie->value());
 }
 void MainWindow::on_spinBOX_Td_editingFinished()
 {

@@ -338,16 +338,17 @@ void MainWindow::on_RESET_Button_clicked()
 {
     symulator.reset();
 
-    ui->spinBOX_WzmocK->setValue(0);
-    ui->spinBOX_Ti->setValue(0);
-    ui->spinBOX_Td->setValue(0);
-    ui->spinBOX_Amplituda->setValue(0);
-    ui->spinBOX_Czstotliwosc->setValue(0);
-    ui->spinBOX_Interwal->setValue(200);
+    symulator.setPID_Kp(0);
+    symulator.setPID_Ti(0);
+    symulator.setPID_Td(0);
+    symulator.setGeneratorA(0);
+    symulator.setGeneratorTRZ(0);
+    symulator.setGeneratorTT(0);
 
-
+    symulator.setPID_TypCalki(RegulatorPID::ZERO);
     ui->radio_przed->setChecked(false);
     ui->radio_pod->setChecked(false);
+
     aktualnyWektorA = {0};
     aktualnyWektorB = {0};
     aktualneOpoznienie = 1;

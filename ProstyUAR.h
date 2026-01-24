@@ -41,14 +41,14 @@ public:
 
         // 3. regulator
         PID = pid.symuluj(uchyb);
-        const double MAX_STEROWANIE = 100.0;
+     /*   const double MAX_STEROWANIE = 100.0;
         if (PID > MAX_STEROWANIE) {
             PID = MAX_STEROWANIE;
         }
         if (PID < -MAX_STEROWANIE) {
             PID = -MAX_STEROWANIE;
         }
-
+*/
         // 4. obiekt ARX
         WartWyjsc = obiekt.symuluj(PID);
 

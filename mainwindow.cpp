@@ -305,13 +305,13 @@ void MainWindow::on_spinBOX_Interwal_editingFinished()
 void MainWindow::on_radio_przed_toggled(bool checked)
 {
     if (checked)
-        symulator.setPID_TypCalki(RegulatorPID::Wew);
+        symulator.setPID_TypCalki(RegulatorPID::Zew);
 }
 
 void MainWindow::on_radio_pod_toggled(bool checked)
 {
     if (checked)
-        symulator.setPID_TypCalki(RegulatorPID::Zew);
+        symulator.setPID_TypCalki(RegulatorPID::Wew);
 }
 
 void MainWindow::on_Reset_d_clicked()

@@ -29,6 +29,8 @@ public:
                             int trybGeneratora,
                             double amplituda,
                             double czestotliwosc,
+                            double StalaSkladniowa,
+                            double Wypelnienie,
                             int interwalMs)
     {
         QJsonObject json;
@@ -51,6 +53,8 @@ public:
         genObj["tryb"] = trybGeneratora;
         genObj["amplituda"] = amplituda;
         genObj["czestotliwosc"] = czestotliwosc;
+        genObj["StalaSkladniowa"] = StalaSkladniowa;
+        genObj["Wypelnienie"] = Wypelnienie;
         json["generator"] = genObj;
 
         json["interwalMs"] = interwalMs;
@@ -78,6 +82,8 @@ public:
                              int& trybGeneratora,
                              double& amplituda,
                              double& czestotliwosc,
+                             double& StalaSkladniowa,
+                             double& Wypelnienie,
                              int& interwalMs)
     {
         QFile plik(sciezka);
@@ -109,6 +115,7 @@ public:
             Ti = pid["Ti"].toDouble(0.0);
             Td = pid["Td"].toDouble(0.0);
             typCalki = pid["typCalki"].toInt(0);
+
         }
 
         if (json.contains("generator")) {
@@ -116,6 +123,8 @@ public:
             trybGeneratora = gen["tryb"].toInt(0);
             amplituda = gen["amplituda"].toDouble(1.0);
             czestotliwosc = gen["czestotliwosc"].toDouble(1.0);
+            StalaSkladniowa = gen["StalaSkladniowa"].toDouble(0.0);
+            Wypelnienie = gen["Wypelnienie"].toDouble(0.0);
         }
 
         interwalMs = json["interwalMs"].toInt(200);

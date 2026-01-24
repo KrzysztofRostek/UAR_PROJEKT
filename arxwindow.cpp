@@ -27,7 +27,7 @@ ARXwindow::ARXwindow(QWidget *parent)
     ui->doubleSpinBox_sigma->setMinimum(0.0);
     ui->doubleSpinBox_sigma->setMaximum(100.0);
     ui->doubleSpinBox_sigma->setSingleStep(0.01);
-    ui->doubleSpinBox_sigma->setDecimals(3);
+    ui->doubleSpinBox_sigma->setDecimals(2);
 }
 void ARXwindow::ustawDane(const std::vector<double>& wektorA,
                           const std::vector<double>& wektorB,

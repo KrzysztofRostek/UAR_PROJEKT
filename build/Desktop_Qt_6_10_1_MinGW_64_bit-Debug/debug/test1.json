@@ -1,0 +1,24 @@
+{
+    "arx": {
+        "odchylenie": 0,
+        "opoznienie": 1,
+        "wektorA": [
+            -0.6
+        ],
+        "wektorB": [
+            0.4
+        ]
+    },
+    "generator": {
+        "amplituda": 10,
+        "czestotliwosc": 5,
+        "tryb": 1
+    },
+    "interwalMs": 50,
+    "pid": {
+        "Kp": 1,
+        "Td": 0,
+        "Ti": 0,
+        "typCalki": 0
+    }
+}

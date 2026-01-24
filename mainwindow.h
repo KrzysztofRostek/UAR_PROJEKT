@@ -69,6 +69,11 @@ private slots:
 
     void on_Wczytaj_Button_clicked();
 
+    void on_SpinBox_Wypelnienie_editingFinished();
+
+    void on_SpinBox_Stala_editingFinished();
+
+
 private:
     Ui::MainWindow *ui;
     MenedzerKonfiguracji menedzerKonfig;
@@ -109,3 +114,4 @@ private:
 };
 
 #endif // MAINWINDOW_H
+

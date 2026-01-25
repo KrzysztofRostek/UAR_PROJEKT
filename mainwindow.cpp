@@ -11,10 +11,10 @@
 
 #include <QDebug>
 
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
-
     , symulator(GeneratorSygnalu(), RegulatorPID(), ModelARX({0}, {0}))
     , aktualnyWektorA({0})
     , aktualnyWektorB({0})
@@ -24,180 +24,173 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     this->showMaximized();
 
-
     //----Serie----//
     seriaP = new QLineSeries();
     seriaI = new QLineSeries();
     seriaD = new QLineSeries();
-
     seriaUchyb = new QLineSeries();
     seriaRegulator = new QLineSeries();
     seriaZad = new QLineSeries();
     seriaRegulowana = new QLineSeries();
+
     //----Tytuły----//
     seriaZad->setName("Wartość zadana");
     seriaRegulowana->setName("Wartość regulowana");
-
     seriaP->setName("P");
     seriaI->setName("I");
     seriaD->setName("D");
-
     seriaUchyb->setName("Uchyb");
     seriaRegulator->setName("Sterowanie u");
 
+    //----Połączenie z symulatorem----//
+    connect(&symulator, &SymulatorUAR::krokWykonany, this, &MainWindow::onKrokWykonany);
 
-
-    //----MAIN----//
+    //----Konfiguracja Wykresu Głównego (MAIN)----//
     QChart *Mainchart = new QChart();
     QChartView *MainchartView = new QChartView(Mainchart);
-    
-    // Połączenie z symulatorem – dodawanie punktów w czasie rzeczywistym
-    connect(&symulator, &SymulatorUAR::krokWykonany, this,
-            [=](double w, double y, double e, double u, int k, double P, double I, double D)
-            {
-                double t = k * symulator.getInterwalMs() / 1000.0;  // przeliczamy czas na sekundy
-                double windowTime = 10.0; // zakres osi X do wyświetlenia
-                
-                // --- Aktualizacja MAIN CHART ---
-                seriaZad->append(t, w);
-                seriaRegulowana->append(t, y);
-                
-                // Automatyczne ustawienie zakresu osi Y z lekkim marginesem
-                double minY = w, maxY = w;
-                for (const QPointF &p : seriaZad->points())        { minY = std::min(minY, p.y()); maxY = std::max(maxY, p.y()); }
-                for (const QPointF &p : seriaRegulowana->points()) { minY = std::min(minY, p.y()); maxY = std::max(maxY, p.y()); }
-                
-                double margin = (maxY - minY) * 0.1; 
-                if (margin < 1e-6) margin = 1.0;
-                mainY->setRange(minY - margin, maxY + margin);
-                mainX->setRange(t > windowTime ? t - windowTime : 0, t);
-                
-                // --- Aktualizacja PID ---
-                seriaP->append(t, P);
-                seriaI->append(t, I);
-                seriaD->append(t, D);
-                
-                auto updateRange = [](QLineSeries* s, double &minVal, double &maxVal){
-                    for (const QPointF &pt : s->points()) {
-                        minVal = std::min(minVal, pt.y());
-                        maxVal = std::max(maxVal, pt.y());
-                    }
-                };
-                
-                double minPID = P, maxPID = P;
-                updateRange(seriaP, minPID, maxPID);
-                updateRange(seriaI, minPID, maxPID);
-                updateRange(seriaD, minPID, maxPID);
-                
-                double pidMargin = (maxPID - minPID) * 0.1; 
-                if (pidMargin < 1e-6) pidMargin = 1.0;
-                pidY->setRange(minPID - pidMargin, maxPID + pidMargin);
-                pidX->setRange(t > windowTime ? t - windowTime : 0, t);
-                
-                // --- Aktualizacja uchybu ---
-                seriaUchyb->append(t, e);
-                double minE = e, maxE = e;
-                updateRange(seriaUchyb, minE, maxE);
-                double eMargin = (maxE - minE) * 0.1; if (eMargin < 1e-6) eMargin = 1.0;
-                uchybY->setRange(minE - eMargin, maxE + eMargin);
-                uchybX->setRange(t > windowTime ? t - windowTime : 0, t);
-                
-                // --- Aktualizacja sterowania ---
-                seriaRegulator->append(t, u);
-                double minU = u, maxU = u;
-                updateRange(seriaRegulator, minU, maxU);
-                double uMargin = (maxU - minU) * 0.1; if (uMargin < 1e-6) uMargin = 1.0;
-                regY->setRange(minU - uMargin, maxU + uMargin);
-                regX->setRange(t > windowTime ? t - windowTime : 0, t);
-            });
-    
+    Mainchart->setAnimationOptions(QChart::NoAnimation);
     MainchartView->setMinimumSize(600, 400);
     Mainchart->addSeries(seriaZad);
     Mainchart->addSeries(seriaRegulowana);
     Mainchart->setTitle("Zadana i Regulowana");
-    
-    // Oś X i Y dla głównego wykresu
+
     mainX = new QValueAxis();
     mainY = new QValueAxis();
     mainX->setTitleText("Czas [s]");
     mainY->setTitleText("Wartość");
     mainX->setTickCount(11);
-    
     Mainchart->addAxis(mainX, Qt::AlignBottom);
     Mainchart->addAxis(mainY, Qt::AlignLeft);
     seriaZad->attachAxis(mainX); seriaZad->attachAxis(mainY);
     seriaRegulowana->attachAxis(mainX); seriaRegulowana->attachAxis(mainY);
-    
+
     MainchartView->setRenderHint(QPainter::Antialiasing);
-    Mainchart->setAnimationOptions(QChart::SeriesAnimations);
     ui->horizontalLayout_5->addWidget(MainchartView);
 
-    //----PID----//
+    //----Konfiguracja Wykresu PID----//
     QChart *PIDchart = new QChart();
     QChartView *PIDchartView = new QChartView(PIDchart);
+    PIDchart->setAnimationOptions(QChart::NoAnimation);
     PIDchart->addSeries(seriaP);
     PIDchart->addSeries(seriaI);
     PIDchart->addSeries(seriaD);
     PIDchart->setTitle("Składowe sterowania PID");
-    
+
     pidX = new QValueAxis();
     pidY = new QValueAxis();
     pidX->setTitleText("Czas [s]");
     pidY->setTitleText("Wartość");
     PIDchart->addAxis(pidX, Qt::AlignBottom);
     PIDchart->addAxis(pidY, Qt::AlignLeft);
-    
     seriaP->attachAxis(pidX); seriaP->attachAxis(pidY);
     seriaI->attachAxis(pidX); seriaI->attachAxis(pidY);
     seriaD->attachAxis(pidX); seriaD->attachAxis(pidY);
-    
+
     PIDchartView->setRenderHint(QPainter::Antialiasing);
-    PIDchart->setAnimationOptions(QChart::SeriesAnimations);
     ui->horizontalLayout_4->addWidget(PIDchartView, 1);
 
-    //----Uchyb----//    
+    //----Konfiguracja Wykresu Uchybu----//
     QChart *Uchybchart = new QChart();
     QChartView *UchybchartView = new QChartView(Uchybchart);
+    Uchybchart->setAnimationOptions(QChart::NoAnimation);
     Uchybchart->addSeries(seriaUchyb);
     Uchybchart->setTitle("Uchyb");
-    
+
     uchybX = new QValueAxis();
     uchybY = new QValueAxis();
     uchybX->setTitleText("Czas [s]");
     uchybY->setTitleText("Wartość");
-    
     Uchybchart->addAxis(uchybX, Qt::AlignBottom);
     Uchybchart->addAxis(uchybY, Qt::AlignLeft);
-    
     seriaUchyb->attachAxis(uchybX); seriaUchyb->attachAxis(uchybY);
-    
+
     UchybchartView->setRenderHint(QPainter::Antialiasing);
-    Uchybchart->setAnimationOptions(QChart::SeriesAnimations);
-    
     ui->horizontalLayout_4->addWidget(UchybchartView, 1);
 
-    //----REGULATOR----//
+    //----Konfiguracja Wykresu Regulatora----//
     QChart *Regulatorchart = new QChart();
     QChartView *RegulatorchartView = new QChartView(Regulatorchart);
+    Regulatorchart->setAnimationOptions(QChart::NoAnimation);
     Regulatorchart->addSeries(seriaRegulator);
     Regulatorchart->setTitle("Regulator");
-    
+
     regX = new QValueAxis();
     regY = new QValueAxis();
     regX->setTitleText("Czas [s]");
     regY->setTitleText("Wartość");
-    
     Regulatorchart->addAxis(regX, Qt::AlignBottom);
     Regulatorchart->addAxis(regY, Qt::AlignLeft);
-    
     seriaRegulator->attachAxis(regX); seriaRegulator->attachAxis(regY);
-    
+
     RegulatorchartView->setRenderHint(QPainter::Antialiasing);
-    Regulatorchart->setAnimationOptions(QChart::SeriesAnimations);
-    
     ui->horizontalLayout_4->addWidget(RegulatorchartView, 1);
     RegulatorchartView->setMinimumSize(0, 300);
 }
+
+
+void MainWindow::onKrokWykonany(double w, double y, double e, double u, int k, double P, double I, double D)
+{
+    double t = k * symulator.getInterwalMs() / 1000.0;
+    double windowTime = 10.0;
+
+    // Obliczenie startu okna czasowego (bez operatora ?)
+    double startTime = 0.0;
+    if (t > windowTime) {
+        startTime = t - windowTime;
+    }
+
+    // Dodanie nowych wartości
+    seriaZad->append(t, w);
+    seriaRegulowana->append(t, y);
+    seriaP->append(t, P);
+    seriaI->append(t, I);
+    seriaD->append(t, D);
+    seriaUchyb->append(t, e);
+    seriaRegulator->append(t, u);
+
+    // Logika wyznaczania zakresu Y tylko dla widocznych punktów
+    auto updateAxisRange = [startTime](QList<QLineSeries*> seriesList, QValueAxis* axisY) {
+        double minVal = 999999.0; // Inicjalizacja dużymi wartościami
+        double maxVal = -999999.0;
+        bool foundAny = false;
+
+        for (QLineSeries* s : seriesList) {
+            const auto points = s->points();
+            // Przeglądamy od końca dla wydajności
+            for (int i = points.size() - 1; i >= 0; i--) {
+                if (points[i].x() < startTime) {
+                    break; // Wyszliśmy poza widoczny zakres czasu
+                }
+                foundAny = true;
+                if (points[i].y() < minVal) minVal = points[i].y();
+                if (points[i].y() > maxVal) maxVal = points[i].y();
+            }
+        }
+
+        if (foundAny) {
+            double range = maxVal - minVal;
+            if (range < 0.001) {
+                axisY->setRange(minVal - 1.0, maxVal + 1.0);
+            } else {
+                double margin = range * 0.1;
+                axisY->setRange(minVal - margin, maxVal + margin);
+            }
+        }
+    };
+
+    // Aktualizacja zakresów osi X (przewijanie)
+    mainX->setRange(startTime, t);
+    pidX->setRange(startTime, t);
+    uchybX->setRange(startTime, t);
+    regX->setRange(startTime, t);
+
+    // Aktualizacja zakresów osi Y (skalowanie dynamiczne do okna)
+    updateAxisRange({seriaZad, seriaRegulowana}, mainY);
+    updateAxisRange({seriaP, seriaI, seriaD}, pidY);
+    updateAxisRange({seriaUchyb}, uchybY);
+    updateAxisRange({seriaRegulator}, regY);
+}
+
 
 void MainWindow::wyczyscWykresy()
 {

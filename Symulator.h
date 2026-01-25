@@ -101,7 +101,7 @@ public:
                 double szum)
     {
         arx.ustawParametry(a, b, opoznienie, szum);
-        reset();
+
     }
 
     // Ręczny krok symulacji

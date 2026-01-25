@@ -74,6 +74,9 @@ private slots:
     void on_SpinBox_Stala_editingFinished();
 
 
+    void onKrokWykonany(double w, double y, double e, double u, int k, double P, double I, double D);
+
+
 private:
     Ui::MainWindow *ui;
     MenedzerKonfiguracji menedzerKonfig;

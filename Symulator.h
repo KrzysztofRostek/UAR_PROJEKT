@@ -39,12 +39,12 @@ public:
         , pid(pid_)
         , arx(arx_)
         , uar(arx, pid)
-        , symuluj(false)
         , k(0)
         , w(0.0)
         , e(0.0)
         , u(0.0)
         , y(0.0)
+        , symuluj(false)
         , interwalMs(200)
     {
         timer.setInterval(interwalMs);

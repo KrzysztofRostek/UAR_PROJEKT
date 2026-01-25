@@ -133,7 +133,7 @@ void MainWindow::onKrokWykonany(double w, double y, double e, double u, int k, d
     double t = k * symulator.getInterwalMs() / 1000.0;
     double windowTime = 10.0;
 
-    // Obliczenie startu okna czasowego (bez operatora ?)
+    // Obliczenie startu okna czasowego
     double startTime = 0.0;
     if (t > windowTime) {
         startTime = t - windowTime;
@@ -148,18 +148,19 @@ void MainWindow::onKrokWykonany(double w, double y, double e, double u, int k, d
     seriaUchyb->append(t, e);
     seriaRegulator->append(t, u);
 
-    // Aktualizacja zakresów osi X (przewijanie)
+    // Aktualizacja zakresów osi X
     mainX->setRange(startTime, t);
     pidX->setRange(startTime, t);
     uchybX->setRange(startTime, t);
     regX->setRange(startTime, t);
 
-    // Aktualizacja zakresów osi Y (skalowanie dynamiczne do okna)
-    dopasujSkalePionowa(mainY, seriaZad, seriaRegulowana); // Wykres główny
-    dopasujSkalePionowa(pidY, seriaP, seriaI, seriaD);    // Wykres PID
-    dopasujSkalePionowa(uchybY, seriaUchyb);               // Wykres uchybu
+    // Dynamiczne dopasowanie skali Y do tego, co aktualnie widac na ekranie
+    dopasujSkalePionowa(mainY, seriaZad, seriaRegulowana);
+    dopasujSkalePionowa(pidY, seriaP, seriaI, seriaD);
+    dopasujSkalePionowa(uchybY, seriaUchyb);
     dopasujSkalePionowa(regY, seriaRegulator);
 }
+
 
 void MainWindow::dopasujSkalePionowa(QValueAxis *osY, QLineSeries *pierwszaSeria, QLineSeries *drugaSeria, QLineSeries *trzeciaSeria)
 {
@@ -167,43 +168,73 @@ void MainWindow::dopasujSkalePionowa(QValueAxis *osY, QLineSeries *pierwszaSeria
     double maxWartosc = -999999.0;
     bool czyZnalezionoJakikolwiekPunkt = false;
 
-    // Pobieramy aktualny czas rozpoczęcia wykresu, żeby wiedzieć co jest widoczne
+    // Pobieramy aktualny czas rozpoczecia wykresu z osi X
     double czasStartu = mainX->min();
 
-    // Tworzymy pomocniczą listę serii, które chcemy sprawdzić
+    // Tworzymy liste pomocnicza, zeby latwiej przejsc przez wszystkie serie w petli
     QList<QLineSeries*> listaSerii;
-    if (pierwszaSeria != nullptr) listaSerii.append(pierwszaSeria);
-    if (drugaSeria != nullptr)    listaSerii.append(drugaSeria);
-    if (trzeciaSeria != nullptr)   listaSerii.append(trzeciaSeria);
 
-    // Przechodzimy przez każdą serię z listy
-    for (QLineSeries *seria : listaSerii) {
+    if (pierwszaSeria != nullptr)
+    {
+        listaSerii.append(pierwszaSeria);
+    }
+
+    if (drugaSeria != nullptr)
+    {
+        listaSerii.append(drugaSeria);
+    }
+
+    if (trzeciaSeria != nullptr)
+    {
+        listaSerii.append(trzeciaSeria);
+    }
+
+    // Przeszukujemy kazda serie, aby znalezc wartosci min i max widoczne na ekranie
+    for (QLineSeries *seria : listaSerii)
+    {
         QList<QPointF> punkty = seria->points();
 
-        // Przeszukujemy punkty od najnowszych (od tyłu), bo to one są na ekranie
-        for (int i = punkty.size() - 1; i >= 0; i--) {
-            // Jeśli punkt jest starszy niż lewa krawędź wykresu, przestajemy szukać w tej serii
-            if (punkty[i].x() < czasStartu) {
+        // Idziemy od konca listy (najnowsze punkty)
+        for (int i = punkty.size() - 1; i >= 0; i--)
+        {
+            // Sprawdzamy, czy punkt miesci sie w widocznym oknie czasowym
+            if (punkty[i].x() < czasStartu)
+            {
+                // Jesli punkt jest starszy niz lewa krawedz wykresu,
+                // przerywamy szukanie w tej konkretnej serii.
                 break;
             }
 
             czyZnalezionoJakikolwiekPunkt = true;
 
-            // Aktualizujemy najmniejszą i największą znalezioną wartość Y
-            if (punkty[i].y() < minWartosc) minWartosc = punkty[i].y();
-            if (punkty[i].y() > maxWartosc) maxWartosc = punkty[i].y();
+            // Sprawdzamy czy wartosc Y punktu jest mniejsza niz dotychczasowe minimum
+            if (punkty[i].y() < minWartosc)
+            {
+                minWartosc = punkty[i].y();
+            }
+
+            // Sprawdzamy czy wartosc Y punktu jest wieksza niz dotychczasowe maksimum
+            if (punkty[i].y() > maxWartosc)
+            {
+                maxWartosc = punkty[i].y();
+            }
         }
     }
 
-    // Jeśli w widocznym oknie są jakieś dane, ustawiamy zakres osi Y
-    if (czyZnalezionoJakikolwiekPunkt) {
+    // Jesli w oknie czasowym znalezlismy jakiekolwiek punkty, ustawiamy skale osi Y
+    if (czyZnalezionoJakikolwiekPunkt == true)
+    {
         double rozpietosc = maxWartosc - minWartosc;
 
-        if (rozpietosc < 0.001) {
-            // Jeśli sygnał jest płaski (np. same zera), ustawiamy sztywny zakres
+        // Sprawdzamy, czy sygnal nie jest plaska linia
+        if (rozpietosc < 0.001)
+        {
+            // Dla plaskiego sygnalu dajemy staly margines +/- 1.0
             osY->setRange(minWartosc - 1.0, maxWartosc + 1.0);
-        } else {
-            // Dodajemy 10% marginesu u góry i na dole dla lepszej czytelności
+        }
+        else
+        {
+            // Obliczamy margines (10% wysokosci wykresu), zeby linia nie dotykala brzegow
             double margines = rozpietosc * 0.1;
             osY->setRange(minWartosc - margines, maxWartosc + margines);
         }
@@ -313,8 +344,8 @@ void MainWindow::on_spinBOX_Ti_editingFinished()
 void MainWindow::on_spinBOX_Interwal_editingFinished()
 {
     symulator.setGeneratorTT(ui->spinBOX_Interwal->value());
-    ui->spinBOX_Interwal->setMinimum(1);
-    ui->spinBOX_Interwal->setMaximum(9999);
+    ui->spinBOX_Interwal->setMinimum(10);
+    ui->spinBOX_Interwal->setMaximum(1000);
     ui->spinBOX_Interwal->setSingleStep(1);
     ui->spinBOX_Interwal->setDecimals(5);
 
@@ -336,11 +367,13 @@ void MainWindow::on_radio_pod_toggled(bool checked)
 void MainWindow::on_Reset_d_clicked()
 {
     symulator.setPID_Td(0);
+    ui->spinBOX_Td->setValue(0);
 }
 
 void MainWindow::on_Reset_i_clicked()
 {
     symulator.setPID_Ti(0);
+    ui->spinBOX_Ti->setValue(0);
 }
 
 void MainWindow::on_START_Button_clicked()
@@ -369,6 +402,11 @@ void MainWindow::on_RESET_Button_clicked()
     ui->spinBOX_Czstotliwosc->setValue(0);
     symulator.setGeneratorTT(200);
     ui->spinBOX_Interwal->setValue(200);
+    symulator.setGeneratorS(0);
+    ui->SpinBox_Stala->setValue(0);
+    symulator.setGeneratorP(0);
+    ui->spinBox_Wypelnienie->setValue(0);
+
 
     symulator.setPID_TypCalki(RegulatorPID::ZERO);
     ui->radio_przed->setChecked(false);

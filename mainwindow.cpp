@@ -148,36 +148,6 @@ void MainWindow::onKrokWykonany(double w, double y, double e, double u, int k, d
     seriaUchyb->append(t, e);
     seriaRegulator->append(t, u);
 
-    // Logika wyznaczania zakresu Y tylko dla widocznych punktów
-    auto updateAxisRange = [startTime](QList<QLineSeries*> seriesList, QValueAxis* axisY) {
-        double minVal = 999999.0; // Inicjalizacja dużymi wartościami
-        double maxVal = -999999.0;
-        bool foundAny = false;
-
-        for (QLineSeries* s : seriesList) {
-            const auto points = s->points();
-            // Przeglądamy od końca dla wydajności
-            for (int i = points.size() - 1; i >= 0; i--) {
-                if (points[i].x() < startTime) {
-                    break; // Wyszliśmy poza widoczny zakres czasu
-                }
-                foundAny = true;
-                if (points[i].y() < minVal) minVal = points[i].y();
-                if (points[i].y() > maxVal) maxVal = points[i].y();
-            }
-        }
-
-        if (foundAny) {
-            double range = maxVal - minVal;
-            if (range < 0.001) {
-                axisY->setRange(minVal - 1.0, maxVal + 1.0);
-            } else {
-                double margin = range * 0.1;
-                axisY->setRange(minVal - margin, maxVal + margin);
-            }
-        }
-    };
-
     // Aktualizacja zakresów osi X (przewijanie)
     mainX->setRange(startTime, t);
     pidX->setRange(startTime, t);
@@ -185,13 +155,60 @@ void MainWindow::onKrokWykonany(double w, double y, double e, double u, int k, d
     regX->setRange(startTime, t);
 
     // Aktualizacja zakresów osi Y (skalowanie dynamiczne do okna)
-    updateAxisRange({seriaZad, seriaRegulowana}, mainY);
-    updateAxisRange({seriaP, seriaI, seriaD}, pidY);
-    updateAxisRange({seriaUchyb}, uchybY);
-    updateAxisRange({seriaRegulator}, regY);
+    dopasujSkalePionowa(mainY, seriaZad, seriaRegulowana); // Wykres główny
+    dopasujSkalePionowa(pidY, seriaP, seriaI, seriaD);    // Wykres PID
+    dopasujSkalePionowa(uchybY, seriaUchyb);               // Wykres uchybu
+    dopasujSkalePionowa(regY, seriaRegulator);
 }
 
+void MainWindow::dopasujSkalePionowa(QValueAxis *osY, QLineSeries *pierwszaSeria, QLineSeries *drugaSeria, QLineSeries *trzeciaSeria)
+{
+    double minWartosc = 999999.0;
+    double maxWartosc = -999999.0;
+    bool czyZnalezionoJakikolwiekPunkt = false;
 
+    // Pobieramy aktualny czas rozpoczęcia wykresu, żeby wiedzieć co jest widoczne
+    double czasStartu = mainX->min();
+
+    // Tworzymy pomocniczą listę serii, które chcemy sprawdzić
+    QList<QLineSeries*> listaSerii;
+    if (pierwszaSeria != nullptr) listaSerii.append(pierwszaSeria);
+    if (drugaSeria != nullptr)    listaSerii.append(drugaSeria);
+    if (trzeciaSeria != nullptr)   listaSerii.append(trzeciaSeria);
+
+    // Przechodzimy przez każdą serię z listy
+    for (QLineSeries *seria : listaSerii) {
+        QList<QPointF> punkty = seria->points();
+
+        // Przeszukujemy punkty od najnowszych (od tyłu), bo to one są na ekranie
+        for (int i = punkty.size() - 1; i >= 0; i--) {
+            // Jeśli punkt jest starszy niż lewa krawędź wykresu, przestajemy szukać w tej serii
+            if (punkty[i].x() < czasStartu) {
+                break;
+            }
+
+            czyZnalezionoJakikolwiekPunkt = true;
+
+            // Aktualizujemy najmniejszą i największą znalezioną wartość Y
+            if (punkty[i].y() < minWartosc) minWartosc = punkty[i].y();
+            if (punkty[i].y() > maxWartosc) maxWartosc = punkty[i].y();
+        }
+    }
+
+    // Jeśli w widocznym oknie są jakieś dane, ustawiamy zakres osi Y
+    if (czyZnalezionoJakikolwiekPunkt) {
+        double rozpietosc = maxWartosc - minWartosc;
+
+        if (rozpietosc < 0.001) {
+            // Jeśli sygnał jest płaski (np. same zera), ustawiamy sztywny zakres
+            osY->setRange(minWartosc - 1.0, maxWartosc + 1.0);
+        } else {
+            // Dodajemy 10% marginesu u góry i na dole dla lepszej czytelności
+            double margines = rozpietosc * 0.1;
+            osY->setRange(minWartosc - margines, maxWartosc + margines);
+        }
+    }
+}
 void MainWindow::wyczyscWykresy()
 {
     // MAIN

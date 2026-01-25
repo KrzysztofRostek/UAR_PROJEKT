@@ -76,6 +76,8 @@ private slots:
 
     void onKrokWykonany(double w, double y, double e, double u, int k, double P, double I, double D);
 
+    // Funkcja pomocnicza do automatycznego skalowania pionowego
+    void dopasujSkalePionowa(QValueAxis *osY, QLineSeries *pierwszaSeria, QLineSeries *drugaSeria = nullptr, QLineSeries *trzeciaSeria = nullptr);
 
 private:
     Ui::MainWindow *ui;

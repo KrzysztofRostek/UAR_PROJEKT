@@ -7,7 +7,7 @@ ARXwindow::ARXwindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    // Ustawienia minimalnych i maksymalnych wartości SpinBoxów
+    // Ustawienia minimalnych i maksymalnych wartosci Spin Boxow
     ui->SpinBox_WektorA->setMinimum(-1000.0);
     ui->SpinBox_WektorA->setMaximum(1000.0);
     ui->SpinBox_WektorA->setSingleStep(0.01);
@@ -38,7 +38,7 @@ void ARXwindow::ustawDane(const std::vector<double>& wektorA,
     ui->listWidget_wektorB->clear();
 
     for (double val : wektorA) {
-        QListWidgetItem *item = new QListWidgetItem(QString::number(val, 'f', 4));
+        QListWidgetItem *item = new QListWidgetItem(QString::number(val, 'f', 4)); // zamieniamy liczbe zmienno przecinkowa na stringa z dokladonosica do 4 miejsc po przecinku
         ui->listWidget_wektorA->addItem(item);
     }
 
@@ -91,18 +91,18 @@ void ARXwindow::on_Remove_Button_wektorB_clicked()
 
 void ARXwindow::on_Zatwierdz_Button_clicked()
 {
-    // Pobranie wektorów
+    // Pobranie wektorow
     std::vector<double> wektorA, wektorB;
     for (int i = 0; i < ui->listWidget_wektorA->count(); ++i)
         wektorA.push_back(ui->listWidget_wektorA->item(i)->text().toDouble());
     for (int i = 0; i < ui->listWidget_wektorB->count(); ++i)
         wektorB.push_back(ui->listWidget_wektorB->item(i)->text().toDouble());
 
-    // Pobranie spinboxów
+    // Pobranie spinboxww
     int uchyb = static_cast<int>(ui->spinBoxOpoznienie->value());
     double sygma = ui->doubleSpinBox_sigma->value();
 
-    // Emitowanie sygnału
+    // Emitowanie sygnalu
     emit zatwierdzonoARX(wektorA, wektorB, uchyb, sygma);
 
     // Zamknięcie okna (opcjonalnie)

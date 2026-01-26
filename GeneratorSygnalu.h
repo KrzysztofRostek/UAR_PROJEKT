@@ -1,4 +1,5 @@
 #pragma once
+#include "qmath.h"
 #include <cmath>
 #include <cstdint>
 using namespace std;
@@ -65,13 +66,12 @@ public:
         return tryb;
     }
 
-    // OBOWI¥ZKOWE przeliczenie okresu dyskretnego
     void przeliczT()
     {
         if (TT <= 0) { //zapobieganie dzieleniu przez 0
             TT = 1;
         }
-        double Td = (1000.0 * TRZ) / TT; //zamiana z s na ms
+        double Td = 4.5 * TRZ; //zamiana z s na ms
         T = static_cast<int>(round(Td)); //zaokrąglanie liczby do całkowitej
         if (T < 1)
             T = 1; //ustawienie okresu minimalnego

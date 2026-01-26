@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'mainwindow.ui'
 **
-** Created by: Qt User Interface Compiler version 6.10.1
+** Created by: Qt User Interface Compiler version 6.6.0
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
@@ -46,11 +46,15 @@ public:
     QPushButton *START_Button;
     QPushButton *STOP_Bttun;
     QPushButton *RESET_Button;
+    QLabel *label_9;
+    QSpinBox *spinBoxOknoczasowe;
     QVBoxLayout *verticalLayout_5;
     QPushButton *Konf_ARX_Button;
     QHBoxLayout *horizontalLayout_12;
     QPushButton *Wczytaj_Button;
     QPushButton *Zapisz_Button;
+    QLabel *label;
+    QDoubleSpinBox *spinBOX_Interwal;
     QHBoxLayout *horizontalLayout_17;
     QGroupBox *groupBox;
     QVBoxLayout *verticalLayout_6;
@@ -64,18 +68,12 @@ public:
     QHBoxLayout *horizontalLayout_6;
     QLabel *label_4;
     QDoubleSpinBox *spinBOX_Czstotliwosc;
-    QHBoxLayout *horizontalLayout_7;
-    QLabel *label_5;
-    QDoubleSpinBox *spinBOX_WzmocK;
     QHBoxLayout *horizontalLayout_15;
     QLabel *label_2;
     QDoubleSpinBox *spinBox_Wypelnienie;
     QHBoxLayout *horizontalLayout_16;
     QLabel *label_6;
     QDoubleSpinBox *SpinBox_Stala;
-    QHBoxLayout *horizontalLayout_14;
-    QLabel *label;
-    QDoubleSpinBox *spinBOX_Interwal;
     QVBoxLayout *verticalLayout_13;
     QGroupBox *groupBox_3;
     QVBoxLayout *verticalLayout_7;
@@ -90,14 +88,13 @@ public:
     QHBoxLayout *horizontalLayout_9;
     QPushButton *Reset_i;
     QDoubleSpinBox *spinBOX_Ti;
-    QGroupBox *groupBox_2;
-    QVBoxLayout *verticalLayout_8;
+    QHBoxLayout *horizontalLayout_20;
+    QLabel *label_5;
+    QDoubleSpinBox *spinBOX_WzmocK;
     QHBoxLayout *horizontalLayout;
     QRadioButton *radio_przed;
     QRadioButton *radio_pod;
     QHBoxLayout *horizontalLayout_18;
-    QLabel *label_9;
-    QSpinBox *spinBoxOknoczasowe;
     QSpacerItem *verticalSpacer;
     QHBoxLayout *horizontalLayout_4;
     QMenuBar *menubar;
@@ -123,7 +120,7 @@ public:
 
         verticalLayout_9 = new QVBoxLayout();
         verticalLayout_9->setObjectName("verticalLayout_9");
-        verticalLayout_9->setSizeConstraint(QLayout::SizeConstraint::SetFixedSize);
+        verticalLayout_9->setSizeConstraint(QLayout::SetDefaultConstraint);
         groupBox_4 = new QGroupBox(centralwidget);
         groupBox_4->setObjectName("groupBox_4");
         groupBox_4->setMinimumSize(QSize(0, 0));
@@ -159,6 +156,19 @@ public:
 
         verticalLayout_12->addWidget(RESET_Button);
 
+        label_9 = new QLabel(groupBox_4);
+        label_9->setObjectName("label_9");
+
+        verticalLayout_12->addWidget(label_9);
+
+        spinBoxOknoczasowe = new QSpinBox(groupBox_4);
+        spinBoxOknoczasowe->setObjectName("spinBoxOknoczasowe");
+        spinBoxOknoczasowe->setMinimumSize(QSize(0, 30));
+        spinBoxOknoczasowe->setMinimum(5);
+        spinBoxOknoczasowe->setMaximum(50);
+
+        verticalLayout_12->addWidget(spinBoxOknoczasowe);
+
 
         horizontalLayout_10->addLayout(verticalLayout_12);
 
@@ -187,6 +197,17 @@ public:
 
 
         verticalLayout_5->addLayout(horizontalLayout_12);
+
+        label = new QLabel(groupBox_4);
+        label->setObjectName("label");
+
+        verticalLayout_5->addWidget(label);
+
+        spinBOX_Interwal = new QDoubleSpinBox(groupBox_4);
+        spinBOX_Interwal->setObjectName("spinBOX_Interwal");
+        spinBOX_Interwal->setMinimumSize(QSize(0, 30));
+
+        verticalLayout_5->addWidget(spinBOX_Interwal);
 
 
         horizontalLayout_10->addLayout(verticalLayout_5);
@@ -262,22 +283,6 @@ public:
 
         verticalLayout->addLayout(horizontalLayout_6);
 
-        horizontalLayout_7 = new QHBoxLayout();
-        horizontalLayout_7->setObjectName("horizontalLayout_7");
-        label_5 = new QLabel(groupBox);
-        label_5->setObjectName("label_5");
-
-        horizontalLayout_7->addWidget(label_5);
-
-        spinBOX_WzmocK = new QDoubleSpinBox(groupBox);
-        spinBOX_WzmocK->setObjectName("spinBOX_WzmocK");
-        spinBOX_WzmocK->setMinimumSize(QSize(82, 30));
-
-        horizontalLayout_7->addWidget(spinBOX_WzmocK);
-
-
-        verticalLayout->addLayout(horizontalLayout_7);
-
         horizontalLayout_15 = new QHBoxLayout();
         horizontalLayout_15->setObjectName("horizontalLayout_15");
         horizontalLayout_15->setContentsMargins(-1, 0, -1, -1);
@@ -314,22 +319,6 @@ public:
 
 
         verticalLayout->addLayout(horizontalLayout_16);
-
-        horizontalLayout_14 = new QHBoxLayout();
-        horizontalLayout_14->setObjectName("horizontalLayout_14");
-        label = new QLabel(groupBox);
-        label->setObjectName("label");
-
-        horizontalLayout_14->addWidget(label);
-
-        spinBOX_Interwal = new QDoubleSpinBox(groupBox);
-        spinBOX_Interwal->setObjectName("spinBOX_Interwal");
-        spinBOX_Interwal->setMinimumSize(QSize(0, 30));
-
-        horizontalLayout_14->addWidget(spinBOX_Interwal);
-
-
-        verticalLayout->addLayout(horizontalLayout_14);
 
 
         verticalLayout_6->addLayout(verticalLayout);
@@ -398,6 +387,41 @@ public:
 
         verticalLayout_2->addLayout(horizontalLayout_9);
 
+        horizontalLayout_20 = new QHBoxLayout();
+        horizontalLayout_20->setObjectName("horizontalLayout_20");
+        label_5 = new QLabel(groupBox_3);
+        label_5->setObjectName("label_5");
+
+        horizontalLayout_20->addWidget(label_5);
+
+        spinBOX_WzmocK = new QDoubleSpinBox(groupBox_3);
+        spinBOX_WzmocK->setObjectName("spinBOX_WzmocK");
+        spinBOX_WzmocK->setMinimumSize(QSize(82, 30));
+
+        horizontalLayout_20->addWidget(spinBOX_WzmocK);
+
+
+        verticalLayout_2->addLayout(horizontalLayout_20);
+
+        horizontalLayout = new QHBoxLayout();
+        horizontalLayout->setObjectName("horizontalLayout");
+        radio_przed = new QRadioButton(groupBox_3);
+        buttonGroup = new QButtonGroup(MainWindow);
+        buttonGroup->setObjectName("buttonGroup");
+        buttonGroup->addButton(radio_przed);
+        radio_przed->setObjectName("radio_przed");
+
+        horizontalLayout->addWidget(radio_przed);
+
+        radio_pod = new QRadioButton(groupBox_3);
+        buttonGroup->addButton(radio_pod);
+        radio_pod->setObjectName("radio_pod");
+
+        horizontalLayout->addWidget(radio_pod);
+
+
+        verticalLayout_2->addLayout(horizontalLayout);
+
 
         verticalLayout_4->addLayout(verticalLayout_2);
 
@@ -407,48 +431,8 @@ public:
 
         verticalLayout_13->addWidget(groupBox_3);
 
-        groupBox_2 = new QGroupBox(centralwidget);
-        groupBox_2->setObjectName("groupBox_2");
-        groupBox_2->setMaximumSize(QSize(199, 16777215));
-        verticalLayout_8 = new QVBoxLayout(groupBox_2);
-        verticalLayout_8->setObjectName("verticalLayout_8");
-        horizontalLayout = new QHBoxLayout();
-        horizontalLayout->setObjectName("horizontalLayout");
-        radio_przed = new QRadioButton(groupBox_2);
-        buttonGroup = new QButtonGroup(MainWindow);
-        buttonGroup->setObjectName("buttonGroup");
-        buttonGroup->addButton(radio_przed);
-        radio_przed->setObjectName("radio_przed");
-
-        horizontalLayout->addWidget(radio_przed);
-
-        radio_pod = new QRadioButton(groupBox_2);
-        buttonGroup->addButton(radio_pod);
-        radio_pod->setObjectName("radio_pod");
-
-        horizontalLayout->addWidget(radio_pod);
-
-
-        verticalLayout_8->addLayout(horizontalLayout);
-
-
-        verticalLayout_13->addWidget(groupBox_2);
-
         horizontalLayout_18 = new QHBoxLayout();
         horizontalLayout_18->setObjectName("horizontalLayout_18");
-        label_9 = new QLabel(centralwidget);
-        label_9->setObjectName("label_9");
-
-        horizontalLayout_18->addWidget(label_9);
-
-        spinBoxOknoczasowe = new QSpinBox(centralwidget);
-        spinBoxOknoczasowe->setObjectName("spinBoxOknoczasowe");
-        spinBoxOknoczasowe->setMinimumSize(QSize(0, 30));
-        spinBoxOknoczasowe->setMinimum(5);
-        spinBoxOknoczasowe->setMaximum(50);
-
-        horizontalLayout_18->addWidget(spinBoxOknoczasowe);
-
 
         verticalLayout_13->addLayout(horizontalLayout_18);
 
@@ -458,7 +442,7 @@ public:
 
         verticalLayout_9->addLayout(horizontalLayout_17);
 
-        verticalSpacer = new QSpacerItem(20, 40, QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Expanding);
+        verticalSpacer = new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding);
 
         verticalLayout_9->addItem(verticalSpacer);
 
@@ -498,27 +482,26 @@ public:
         START_Button->setText(QCoreApplication::translate("MainWindow", "START", nullptr));
         STOP_Bttun->setText(QCoreApplication::translate("MainWindow", "STOP", nullptr));
         RESET_Button->setText(QCoreApplication::translate("MainWindow", "RESET", nullptr));
+        label_9->setText(QCoreApplication::translate("MainWindow", "Okno czasowe", nullptr));
         Konf_ARX_Button->setText(QCoreApplication::translate("MainWindow", "Konfiguracja ARX", nullptr));
         Wczytaj_Button->setText(QCoreApplication::translate("MainWindow", "Wczytaj", nullptr));
         Zapisz_Button->setText(QCoreApplication::translate("MainWindow", "Zapisz", nullptr));
+        label->setText(QCoreApplication::translate("MainWindow", "Interwa\305\202", nullptr));
         groupBox->setTitle(QCoreApplication::translate("MainWindow", "sygna\305\202", nullptr));
         Sin_Button->setText(QCoreApplication::translate("MainWindow", "sinus", nullptr));
         Square_Button->setText(QCoreApplication::translate("MainWindow", "square", nullptr));
         label_3->setText(QCoreApplication::translate("MainWindow", "amplituda", nullptr));
-        label_4->setText(QCoreApplication::translate("MainWindow", "cz\304\231stowliwosc", nullptr));
-        label_5->setText(QCoreApplication::translate("MainWindow", "wzmocnienie K", nullptr));
+        label_4->setText(QCoreApplication::translate("MainWindow", "Okres", nullptr));
         label_2->setText(QCoreApplication::translate("MainWindow", "Wype\305\202nienie P", nullptr));
         label_6->setText(QCoreApplication::translate("MainWindow", "Sta\305\202a S", nullptr));
-        label->setText(QCoreApplication::translate("MainWindow", "Interwa\305\202", nullptr));
-        groupBox_3->setTitle(QCoreApplication::translate("MainWindow", "czas", nullptr));
+        groupBox_3->setTitle(QCoreApplication::translate("MainWindow", "PID", nullptr));
         label_7->setText(QCoreApplication::translate("MainWindow", "r\303\263zniczkowania Td", nullptr));
         Reset_d->setText(QCoreApplication::translate("MainWindow", "RESET d", nullptr));
         label_8->setText(QCoreApplication::translate("MainWindow", "ca\305\202kowania Ti", nullptr));
         Reset_i->setText(QCoreApplication::translate("MainWindow", " RESET I", nullptr));
-        groupBox_2->setTitle(QCoreApplication::translate("MainWindow", "tryb czesci calkujacej ", nullptr));
+        label_5->setText(QCoreApplication::translate("MainWindow", "wzmocnienie K", nullptr));
         radio_przed->setText(QCoreApplication::translate("MainWindow", "przed suma", nullptr));
         radio_pod->setText(QCoreApplication::translate("MainWindow", "pod suma", nullptr));
-        label_9->setText(QCoreApplication::translate("MainWindow", "Okno czasowe", nullptr));
         menuUAR->setTitle(QCoreApplication::translate("MainWindow", "UAR", nullptr));
     } // retranslateUi
 

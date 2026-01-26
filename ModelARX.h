@@ -91,9 +91,7 @@ public:
         double WartWyjsc = 0.0;
 
         for (int i = 0; i < IleB; ++i) {
-            int OpozSter
-                = i
-                  + opoznienie; //obliczenie którą komórkę histori wartości sterujących użyć do każdego współczynnika B
+            int OpozSter= i + opoznienie; //obliczenie którą komórkę histori wartości sterujących użyć do każdego współczynnika B
             if (OpozSter < 20) //zabezpieczenie przed wyjściem poza zakres
                 WartWyjsc
                     += B[i]

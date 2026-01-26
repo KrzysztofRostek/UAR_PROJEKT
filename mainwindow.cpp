@@ -419,13 +419,11 @@ void MainWindow::on_radio_pod_toggled(bool checked)
 void MainWindow::on_Reset_d_clicked()
 {
     symulator.setPID_Td(0);
-    ui->spinBOX_Td->setValue(0);
 }
 
 void MainWindow::on_Reset_i_clicked()
 {
     symulator.setPID_Ti(0);
-    ui->spinBOX_Ti->setValue(0);
 }
 
 void MainWindow::on_START_Button_clicked()
@@ -460,8 +458,8 @@ void MainWindow::on_RESET_Button_clicked()
     ui->spinBox_Wypelnienie->setValue(0);
 
 
-    symulator.setPID_TypCalki(RegulatorPID::ZERO);
-    ui->radio_przed->setChecked(false);
+    symulator.setPID_TypCalki(RegulatorPID::Zew);
+    ui->radio_przed->setChecked(true);
     ui->radio_pod->setChecked(false);
     aktualnyWektorA = {0};
     aktualnyWektorB = {0};

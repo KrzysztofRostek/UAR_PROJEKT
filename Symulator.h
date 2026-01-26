@@ -39,12 +39,12 @@ public:
         , pid(pid_)
         , arx(arx_)
         , uar(arx, pid)
-        , symuluj(false)
         , k(0)
         , w(0.0)
         , e(0.0)
         , u(0.0)
         , y(0.0)
+        , symuluj(false)
         , interwalMs(200)
     {
         timer.setInterval(interwalMs);
@@ -127,7 +127,6 @@ public:
             ms = 1;
         interwalMs = ms;
         timer.setInterval(ms);
-        pid.setT(ms/1000.0);
     }
 
     bool czysymuluj() const { return symuluj; }

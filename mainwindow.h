@@ -79,6 +79,8 @@ private slots:
     // Funkcja pomocnicza do automatycznego skalowania pionowego
     void dopasujSkalePionowa(QValueAxis *osY, QLineSeries *pierwszaSeria, QLineSeries *drugaSeria = nullptr, QLineSeries *trzeciaSeria = nullptr);
 
+    void on_spinBoxOknoczasowe_editingFinished();
+
 private:
     Ui::MainWindow *ui;
     MenedzerKonfiguracji menedzerKonfig;

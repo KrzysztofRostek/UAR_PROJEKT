@@ -130,16 +130,16 @@ MainWindow::MainWindow(QWidget *parent)
 
 void MainWindow::onKrokWykonany(double w, double y, double e, double u, int k, double P, double I, double D)
 {
-    double t = k * symulator.getInterwalMs() / 1000.0;
-    double windowTime = 10.0;
+    // 1. Parametry okna i czasu
+    // Pobieramy wartosc z GUI (5-50s)
+    double oknoSekundy = ui->spinBoxOknoczasowe->value();
+    double interwalMs = symulator.getInterwalMs();
+    double t = k * interwalMs / 1000.0;
 
-    // Obliczenie startu okna czasowego
-    double startTime = 0.0;
-    if (t > windowTime) {
-        startTime = t - windowTime;
-    }
+    // Obliczamy ile probek powinno byc na ekranie (np. dla 10s i 200ms n=50)
+    int n_docelowe = static_cast<int>((oknoSekundy * 1000.0) / interwalMs);
 
-    // Dodanie nowych wartości
+    // 2. Dodanie nowych danych
     seriaZad->append(t, w);
     seriaRegulowana->append(t, y);
     seriaP->append(t, P);
@@ -148,19 +148,52 @@ void MainWindow::onKrokWykonany(double w, double y, double e, double u, int k, d
     seriaUchyb->append(t, e);
     seriaRegulator->append(t, u);
 
-    // Aktualizacja zakresów osi X
+    // 3. Logika zapominania probek
+    int n_aktualne = seriaZad->count();
+
+    if (n_aktualne > n_docelowe)
+    {
+        // Jesli okno zmalalo, usuwamy 2 stare probki na 1 nowa (rozszerzanie wykresu)
+        int doUsuniecia = (n_aktualne - n_docelowe >= 2) ? 2 : 1;
+
+        for (int i = 0; i < doUsuniecia; ++i)
+        {
+            seriaZad->remove(0);
+            seriaRegulowana->remove(0);
+            seriaP->remove(0);
+            seriaI->remove(0);
+            seriaD->remove(0);
+            seriaUchyb->remove(0);
+            seriaRegulator->remove(0);
+        }
+    }
+    else if (n_aktualne == n_docelowe)
+    {
+        // Standardowe przesuwanie: usuwamy 1 najstarsza probke
+        seriaZad->remove(0);
+        seriaRegulowana->remove(0);
+        seriaP->remove(0);
+        seriaI->remove(0);
+        seriaD->remove(0);
+        seriaUchyb->remove(0);
+        seriaRegulator->remove(0);
+    }
+    // Jesli n_aktualne < n_docelowe, nic nie usuwamy (sciskanie wykresu)
+
+    // 4. Aktualizacja osi X
+    // Zakres od czasu pierwszej dostepnej probki do aktualnego t
+    double startTime = seriaZad->at(0).x();
     mainX->setRange(startTime, t);
     pidX->setRange(startTime, t);
     uchybX->setRange(startTime, t);
     regX->setRange(startTime, t);
 
-    // Dynamiczne dopasowanie skali Y do tego, co aktualnie widac na ekranie
+    // 5. Skalowanie pionowe Y
     dopasujSkalePionowa(mainY, seriaZad, seriaRegulowana);
     dopasujSkalePionowa(pidY, seriaP, seriaI, seriaD);
     dopasujSkalePionowa(uchybY, seriaUchyb);
     dopasujSkalePionowa(regY, seriaRegulator);
 }
-
 
 void MainWindow::dopasujSkalePionowa(QValueAxis *osY, QLineSeries *pierwszaSeria, QLineSeries *drugaSeria, QLineSeries *trzeciaSeria)
 {
@@ -352,6 +385,25 @@ void MainWindow::on_spinBOX_Interwal_editingFinished()
 
 }
 
+void MainWindow::on_spinBoxOknoczasowe_editingFinished()
+{
+    // Odswiezenie osi X
+    if (seriaZad->count() > 0)
+    {
+        double okno = ui->spinBoxOknoczasowe->value();
+        double t_koncowe = seriaZad->points().last().x();
+        double t_startowe = t_koncowe - okno;
+
+        if (t_startowe < 0) t_startowe = 0;
+
+        mainX->setRange(t_startowe, t_koncowe);
+        pidX->setRange(t_startowe, t_koncowe);
+        uchybX->setRange(t_startowe, t_koncowe);
+        regX->setRange(t_startowe, t_koncowe);
+    }
+}
+
+
 void MainWindow::on_radio_przed_toggled(bool checked)
 {
     if (checked)
@@ -530,6 +582,7 @@ void MainWindow::on_Wczytaj_Button_clicked()
         QMessageBox::warning(this, "blad", "nie udało sie wczytac");
     }
 }
+
 
 
 

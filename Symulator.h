@@ -103,7 +103,10 @@ public:
         arx.ustawParametry(a, b, opoznienie, szum);
 
     }
-
+    void setARX_Umin(double umin) { arx.setUmin(umin); }
+    void setARX_Umax(double umax) { arx.setUmax(umax); }
+    void setARX_Ymin(double ymin) { arx.setYmin(ymin); }
+    void setARX_Ymax(double ymax) { arx.setYmax(ymax); }
     // Ręczny krok symulacji
     void krokSymulacji()
     {

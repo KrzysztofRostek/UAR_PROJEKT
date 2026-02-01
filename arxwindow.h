@@ -2,7 +2,7 @@
 #define ARXWINDOW_H
 
 #include <QMainWindow>
-//DZIALA
+#include <vector>
 
 namespace Ui {
 class ARXwindow;
@@ -19,22 +19,25 @@ public:
     void ustawDane(const std::vector<double>& wektorA,
                    const std::vector<double>& wektorB,
                    int opoznienie,
-                   double sigma);
+                   double sigma,
+                   double uMin, double uMax,
+                   double yMin, double yMax,
+                   bool czyAktywne);
+
 signals:
     void zatwierdzonoARX(const std::vector<double> &a,
                          const std::vector<double> &b,
                          int opoznienie,
-                         double szum);
+                         double szum,
+                         double uMin, double uMax,
+                         double yMin, double yMax,
+                         bool czyAktywne);
+
 private slots:
-
     void on_Add_Button_wektorA_clicked();
-
     void on_Remove_Button_wektorA_clicked();
-
     void on_Add_Button_wektorB_clicked();
-
     void on_Remove_Button_wektorB_clicked();
-
     void on_Zatwierdz_Button_clicked();
 
 private:

@@ -26,7 +26,13 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-
+    void ustawARXDane(const std::vector<double> &a,
+                      const std::vector<double> &b,
+                      int opoznienie,
+                      double szum,
+                      double uMin, double uMax,
+                      double yMin, double yMax,
+                      bool aktywne);
 private slots:
     void on_Sin_Button_clicked();
 
@@ -56,10 +62,6 @@ private slots:
 
     void on_Konf_ARX_Button_clicked();
 
-    void ustawARXDane(const std::vector<double> &a,
-                      const std::vector<double> &b,
-                      int opoznienie,
-                      double szum);
 
     void on_STOP_Bttun_clicked();
 
@@ -118,6 +120,12 @@ private:
     std::vector<double> aktualnyWektorB;
     int aktualneOpoznienie;
     double aktualnySzum;
+
+    double arx_uMin = -10.0;
+    double arx_uMax = 10.0;
+    double arx_yMin = -10.0;
+    double arx_yMax = 10.0;
+    bool arx_ograniczenia = true;
 };
 
 #endif // MAINWINDOW_H

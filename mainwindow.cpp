@@ -474,22 +474,42 @@ void MainWindow::on_RESET_Button_clicked()
 void MainWindow::ustawARXDane(const std::vector<double> &a,
                               const std::vector<double> &b,
                               int opoznienie,
-                              double szum)
+                              double szum,
+                              double uMin, double uMax,
+                              double yMin, double yMax,
+                              bool aktywne)
 {
     aktualnyWektorA = a;
     aktualnyWektorB = b;
     aktualneOpoznienie = opoznienie;
     aktualnySzum = szum;
+    arx_uMin = uMin;
+    arx_uMax = uMax;
+    arx_yMin = yMin;
+    arx_yMax = yMax;
+    arx_ograniczenia = aktywne;
+
     symulator.setARX(a, b, opoznienie, szum);
+
+    symulator.setARX_Umin(uMin);
+    symulator.setARX_Umax(uMax);
+    symulator.setARX_Ymin(yMin);
+    symulator.setARX_Ymax(yMax);
+    symulator.setARX_Ograniczenia(aktywne);
 }
 
 void MainWindow::on_Konf_ARX_Button_clicked()
 {
     if (!arxwindow) {
         arxwindow = new ARXwindow(this);
+
+        connect(arxwindow, &ARXwindow::zatwierdzonoARX, this, &MainWindow::ustawARXDane);
     }
-    connect(arxwindow, &ARXwindow::zatwierdzonoARX, this, &MainWindow::ustawARXDane);
-    arxwindow->ustawDane(aktualnyWektorA, aktualnyWektorB, aktualneOpoznienie, aktualnySzum);
+
+
+    arxwindow->ustawDane(aktualnyWektorA, aktualnyWektorB, aktualneOpoznienie, aktualnySzum,
+                         arx_uMin, arx_uMax, arx_yMin, arx_yMax, arx_ograniczenia);
+
     arxwindow->show();
     arxwindow->raise();
     arxwindow->activateWindow();

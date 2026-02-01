@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'mainwindow.ui'
 **
-** Created by: Qt User Interface Compiler version 6.6.0
+** Created by: Qt User Interface Compiler version 6.10.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
@@ -74,7 +74,6 @@ public:
     QHBoxLayout *horizontalLayout_16;
     QLabel *label_6;
     QDoubleSpinBox *SpinBox_Stala;
-    QVBoxLayout *verticalLayout_13;
     QGroupBox *groupBox_3;
     QVBoxLayout *verticalLayout_7;
     QVBoxLayout *verticalLayout_4;
@@ -94,7 +93,6 @@ public:
     QHBoxLayout *horizontalLayout;
     QRadioButton *radio_przed;
     QRadioButton *radio_pod;
-    QHBoxLayout *horizontalLayout_18;
     QSpacerItem *verticalSpacer;
     QHBoxLayout *horizontalLayout_4;
     QMenuBar *menubar;
@@ -120,18 +118,18 @@ public:
 
         verticalLayout_9 = new QVBoxLayout();
         verticalLayout_9->setObjectName("verticalLayout_9");
-        verticalLayout_9->setSizeConstraint(QLayout::SetDefaultConstraint);
+        verticalLayout_9->setSizeConstraint(QLayout::SizeConstraint::SetDefaultConstraint);
         groupBox_4 = new QGroupBox(centralwidget);
         groupBox_4->setObjectName("groupBox_4");
         groupBox_4->setMinimumSize(QSize(0, 0));
-        groupBox_4->setMaximumSize(QSize(498, 190));
+        groupBox_4->setMaximumSize(QSize(498, 230));
         verticalLayout_10 = new QVBoxLayout(groupBox_4);
         verticalLayout_10->setObjectName("verticalLayout_10");
         horizontalLayout_10 = new QHBoxLayout();
         horizontalLayout_10->setSpacing(13);
         horizontalLayout_10->setObjectName("horizontalLayout_10");
         verticalLayout_12 = new QVBoxLayout();
-        verticalLayout_12->setSpacing(12);
+        verticalLayout_12->setSpacing(10);
         verticalLayout_12->setObjectName("verticalLayout_12");
         horizontalLayout_11 = new QHBoxLayout();
         horizontalLayout_11->setObjectName("horizontalLayout_11");
@@ -173,7 +171,7 @@ public:
         horizontalLayout_10->addLayout(verticalLayout_12);
 
         verticalLayout_5 = new QVBoxLayout();
-        verticalLayout_5->setSpacing(12);
+        verticalLayout_5->setSpacing(14);
         verticalLayout_5->setObjectName("verticalLayout_5");
         Konf_ARX_Button = new QPushButton(groupBox_4);
         Konf_ARX_Button->setObjectName("Konf_ARX_Button");
@@ -326,8 +324,6 @@ public:
 
         horizontalLayout_17->addWidget(groupBox);
 
-        verticalLayout_13 = new QVBoxLayout();
-        verticalLayout_13->setObjectName("verticalLayout_13");
         groupBox_3 = new QGroupBox(centralwidget);
         groupBox_3->setObjectName("groupBox_3");
         groupBox_3->setMaximumSize(QSize(199, 16777215));
@@ -429,20 +425,12 @@ public:
         verticalLayout_7->addLayout(verticalLayout_4);
 
 
-        verticalLayout_13->addWidget(groupBox_3);
-
-        horizontalLayout_18 = new QHBoxLayout();
-        horizontalLayout_18->setObjectName("horizontalLayout_18");
-
-        verticalLayout_13->addLayout(horizontalLayout_18);
-
-
-        horizontalLayout_17->addLayout(verticalLayout_13);
+        horizontalLayout_17->addWidget(groupBox_3);
 
 
         verticalLayout_9->addLayout(horizontalLayout_17);
 
-        verticalSpacer = new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding);
+        verticalSpacer = new QSpacerItem(20, 40, QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Expanding);
 
         verticalLayout_9->addItem(verticalSpacer);
 

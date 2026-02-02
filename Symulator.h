@@ -27,6 +27,7 @@ private:
     bool symuluj;
     int interwalMs;
     QTimer timer;
+    double czasSymulacji;
 
 public:
     // KONSTRUKTOR - INLINE
@@ -46,6 +47,7 @@ public:
         , y(0.0)
         , symuluj(false)
         , interwalMs(200)
+        , czasSymulacji(0.0)
     {
         timer.setInterval(interwalMs);
         connect(&timer, &QTimer::timeout, this, &SymulatorUAR::Tick);
@@ -70,6 +72,7 @@ public:
         stop();
         k = 0;
         w = e = u = y = 0.0;
+        czasSymulacji=0.0;
         uar.reset();
     }
 
@@ -141,20 +144,24 @@ public:
     double getD() const { return pid.D; }
 
 signals:
-    void krokWykonany(double w, double y, double e, double u, int k, double P, double I, double D);
+    void krokWykonany(double t, double w, double y, double e, double u, int k, double P, double I, double D);
 
 private slots:
     void Tick()
     {
+        static int k_generator = 0;
+
+        double val = generator.generuj(k_generator);
+        k_generator++;
         if (!symuluj)
             return;
         uar.krok(w, e, u, y, generator, k);
-
+        czasSymulacji += interwalMs / 1000.0;
         double wartP = getP();
         double wartI = getI();
         double wartD = getD();
 
-        emit krokWykonany(w, y, e, u, k, wartP, wartI, wartD); //emitujemy dane
+       emit krokWykonany(czasSymulacji, w, y, e, u, k, wartP, wartI, wartD); //emitujemy dane
 
         k++;
     }

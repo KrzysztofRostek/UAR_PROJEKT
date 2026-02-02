@@ -76,7 +76,7 @@ private slots:
     void on_SpinBox_Stala_editingFinished();
 
 
-    void onKrokWykonany(double w, double y, double e, double u, int k, double P, double I, double D);
+    void onKrokWykonany(double t, double w, double y, double e, double u, int k,double P, double I, double D);
 
     // Funkcja pomocnicza do automatycznego skalowania pionowego
     void dopasujSkalePionowa(QValueAxis *osY, QLineSeries *pierwszaSeria, QLineSeries *drugaSeria = nullptr, QLineSeries *trzeciaSeria = nullptr);

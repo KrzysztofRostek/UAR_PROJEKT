@@ -79,25 +79,19 @@ public:
 
     double generuj(int i) const
     {
-        if (T <= 0) { //zapobieganie błędnemu T
-            return S;
-        }
-        int k = i % T; //przekształcenie numeru próbki na pozycję wewnątrz okresu sygnału
+        double Ts = 0.01;          // okres próbkowania generatora (stały!)
+        double t = i * Ts;         // czas w sekundach
+        double val = S;
 
-        switch (tryb) {
-        case SINUS: {
-            return A * sin(k * (2.0 * M_PI / T)) + S;
+        switch(tryb)
+        {
+        case SINUS:
+            val = A * sin(2 * M_PI / TRZ * t) + S;
+            break;
+        case PROSTOKAT:
+            val = (fmod(t, TRZ) < TRZ * p) ? (A + S) : S;
+            break;
         }
-        case PROSTOKAT: {
-            if (k < p * T) {
-                return A + S; //stan wysoki
-            } else {
-                return S; //stan niski
-            }
-        }
-        default: { //wypadek nieznanego trybu
-            return S;
-        }
-        }
+        return val;
     }
 };

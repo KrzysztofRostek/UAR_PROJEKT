@@ -128,18 +128,17 @@ MainWindow::MainWindow(QWidget *parent)
 }
 
 
-void MainWindow::onKrokWykonany(double w, double y, double e, double u, int k, double P, double I, double D)
+void MainWindow::onKrokWykonany(double t, double w, double y,
+                                double e, double u, int,
+                                double P, double I, double D)
 {
-    // 1. Parametry okna i czasu
-    // Pobieramy wartosc z GUI (5-50s)
     double oknoSekundy = ui->spinBoxOknoczasowe->value();
-    double interwalMs = symulator.getInterwalMs();
-    double t = k * interwalMs / 1000.0;
+    double interwalMs  = symulator.getInterwalMs();
 
-    // Obliczamy ile probek powinno byc na ekranie (np. dla 10s i 200ms n=50)
     int n_docelowe = static_cast<int>((oknoSekundy * 1000.0) / interwalMs);
+    if (n_docelowe < 2) n_docelowe = 2;
 
-    // 2. Dodanie nowych danych
+    // Dodanie punktów
     seriaZad->append(t, w);
     seriaRegulowana->append(t, y);
     seriaP->append(t, P);
@@ -148,28 +147,9 @@ void MainWindow::onKrokWykonany(double w, double y, double e, double u, int k, d
     seriaUchyb->append(t, e);
     seriaRegulator->append(t, u);
 
-    // 3. Logika zapominania probek
-    int n_aktualne = seriaZad->count();
-
-    if (n_aktualne > n_docelowe)
+    // Usuwanie nadmiaru (STABILNE)
+    while (seriaZad->count() > n_docelowe)
     {
-        // Jesli okno zmalalo, usuwamy 2 stare probki na 1 nowa (rozszerzanie wykresu)
-        int doUsuniecia = (n_aktualne - n_docelowe >= 2) ? 2 : 1;
-
-        for (int i = 0; i < doUsuniecia; ++i)
-        {
-            seriaZad->remove(0);
-            seriaRegulowana->remove(0);
-            seriaP->remove(0);
-            seriaI->remove(0);
-            seriaD->remove(0);
-            seriaUchyb->remove(0);
-            seriaRegulator->remove(0);
-        }
-    }
-    else if (n_aktualne == n_docelowe)
-    {
-        // Standardowe przesuwanie: usuwamy 1 najstarsza probke
         seriaZad->remove(0);
         seriaRegulowana->remove(0);
         seriaP->remove(0);
@@ -178,17 +158,16 @@ void MainWindow::onKrokWykonany(double w, double y, double e, double u, int k, d
         seriaUchyb->remove(0);
         seriaRegulator->remove(0);
     }
-    // Jesli n_aktualne < n_docelowe, nic nie usuwamy (sciskanie wykresu)
 
-    // 4. Aktualizacja osi X
-    // Zakres od czasu pierwszej dostepnej probki do aktualnego t
+    if (seriaZad->count() < 2) return;
+
     double startTime = seriaZad->at(0).x();
+
     mainX->setRange(startTime, t);
     pidX->setRange(startTime, t);
     uchybX->setRange(startTime, t);
     regX->setRange(startTime, t);
 
-    // 5. Skalowanie pionowe Y
     dopasujSkalePionowa(mainY, seriaZad, seriaRegulowana);
     dopasujSkalePionowa(pidY, seriaP, seriaI, seriaD);
     dopasujSkalePionowa(uchybY, seriaUchyb);
@@ -376,7 +355,12 @@ void MainWindow::on_spinBOX_Ti_editingFinished()
 
 void MainWindow::on_spinBOX_Interwal_editingFinished()
 {
-    symulator.setGeneratorTT(ui->spinBOX_Interwal->value());
+    int ms = ui->spinBOX_Interwal->value();
+
+    symulator.setInterwalMs(ms);
+    symulator.setPID_T(ms / 1000.0);
+
+    ui->spinBOX_Interwal->setMaximum(1000);
     ui->spinBOX_Interwal->setMaximum(1000);
     ui->spinBOX_Interwal->setMinimum(10);
     ui->spinBOX_Interwal->setSingleStep(1);

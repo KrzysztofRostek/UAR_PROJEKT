@@ -19,6 +19,7 @@ private:
     double umax;
     double ymin;
     double ymax;
+    bool ograniczenia;
     double saturacja(double wartosc, double min_val, double max_val)
     {
         if (wartosc > max_val) return max_val;
@@ -72,10 +73,11 @@ public:
             B[i] = b_wektor[i];
         }
     }
-    void setUmin(double umin) { umin = umin; }
-    void setUmax(double umax) { umax = umax; }
-    void setYmin(double ymin) { ymin = ymin; }
-    void setYmax(double ymax) { ymax = ymax; }
+    void setOgraniczenia(bool Ograniczenia){ograniczenia = Ograniczenia;}
+    void setUmin(double Umin) { umin = Umin; }
+    void setUmax(double Umax) { umax = Umax; }
+    void setYmin(double Ymin) { ymin = Ymin; }
+    void setYmax(double Ymax) { ymax = Ymax; }
     void reset() //resetowanie histori wyjść i histori wartości sterujących
     {
         for (int i = 0; i < IleA; ++i) {
@@ -95,7 +97,9 @@ public:
     }
     double symuluj(double WartSter)
     {
+        if(ograniczenia){
         WartSter = saturacja(WartSter, umin, umax);
+        }
         // przesunięcie historii sterowania
         for (int i = 29; i > 0; --i) {
             HistSter[i] = HistSter[i-1];
@@ -116,8 +120,9 @@ public:
         }
 
         WartWyjsc += losowySzum();
-
+        if(ograniczenia){
         WartWyjsc = saturacja(WartWyjsc, ymin, ymax);
+        }
         // przesunięcie historii wyjść
         for (int i = IleA-1; i > 0; --i) {
             HistWyjsc[i] = HistWyjsc[i-1];

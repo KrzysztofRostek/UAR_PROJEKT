@@ -326,7 +326,7 @@ void MainWindow::on_spinBOX_WzmocK_editingFinished()
     ui->spinBOX_WzmocK->setMinimum(0.0);
     ui->spinBOX_WzmocK->setMaximum(1000.0);
     ui->spinBOX_WzmocK->setSingleStep(0.1);
-    ui->spinBOX_WzmocK->setDecimals(5);
+    ui->spinBOX_WzmocK->setDecimals(1);
 }
 
 void MainWindow::on_spinBOX_Amplituda_editingFinished()
@@ -335,7 +335,7 @@ void MainWindow::on_spinBOX_Amplituda_editingFinished()
     ui->spinBOX_Amplituda->setMinimum(0.0);
     ui->spinBOX_Amplituda->setMaximum(1000.0);
     ui->spinBOX_Amplituda->setSingleStep(0.1);
-    ui->spinBOX_Amplituda->setDecimals(5);
+    ui->spinBOX_Amplituda->setDecimals(1);
 }
 
 void MainWindow::on_spinBOX_Czstotliwosc_editingFinished()
@@ -344,7 +344,7 @@ void MainWindow::on_spinBOX_Czstotliwosc_editingFinished()
     ui->spinBOX_Czstotliwosc->setMinimum(0.01);
     ui->spinBOX_Czstotliwosc->setMaximum(1000.0);
     ui->spinBOX_Czstotliwosc->setSingleStep(0.01);
-    ui->spinBOX_Czstotliwosc->setDecimals(5);
+    ui->spinBOX_Czstotliwosc->setDecimals(2);
 }
 void MainWindow::on_spinBox_Wypelnienie_editingFinished()
 {
@@ -362,7 +362,7 @@ void MainWindow::on_spinBOX_Td_editingFinished()
     ui->spinBOX_Td->setMinimum(0.0);
     ui->spinBOX_Td->setMaximum(1000.0);
     ui->spinBOX_Td->setSingleStep(0.1);
-    ui->spinBOX_Td->setDecimals(5);
+    ui->spinBOX_Td->setDecimals(1);
 }
 
 void MainWindow::on_spinBOX_Ti_editingFinished()
@@ -371,16 +371,16 @@ void MainWindow::on_spinBOX_Ti_editingFinished()
     ui->spinBOX_Ti->setMinimum(0.0);
     ui->spinBOX_Ti->setMaximum(1000.0);
     ui->spinBOX_Ti->setSingleStep(0.1);
-    ui->spinBOX_Ti->setDecimals(5);
+    ui->spinBOX_Ti->setDecimals(1);
 }
 
 void MainWindow::on_spinBOX_Interwal_editingFinished()
 {
     symulator.setGeneratorTT(ui->spinBOX_Interwal->value());
-    ui->spinBOX_Interwal->setMinimum(10);
     ui->spinBOX_Interwal->setMaximum(1000);
+    ui->spinBOX_Interwal->setMinimum(10);
     ui->spinBOX_Interwal->setSingleStep(1);
-    ui->spinBOX_Interwal->setDecimals(5);
+    ui->spinBOX_Interwal->setDecimals(0);
 
 
 }

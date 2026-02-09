@@ -11,30 +11,62 @@ private:
     RegulatorPID &pid; //referencja do PID
 
     double wartwyjsc_poprzedni; //poprzednie wyjście y(k-1)
-    double k_generator;
 
 public:
-    ProstyUAR(ModelARX &arx, RegulatorPID &pid)
-        : obiekt(arx), pid(pid), wartwyjsc_poprzedni(0.0), k_generator(0)
+    ProstyUAR(ModelARX &arx, RegulatorPID &pid) // Konstruktor
+        : obiekt(arx)
+        , pid(pid)
+        , wartwyjsc_poprzedni(0.0)
     {}
 
-    void reset()
+    void reset() //reset
     {
         wartwyjsc_poprzedni = 0.0;
-        k_generator = 0;   // reset licznika generatora
         pid.reset();
         obiekt.reset();
     }
 
-    void krok(double &generatorVal, double &uchyb, double &PID, double &WartWyjsc, GeneratorSygnalu &gen, int)
+    void krok(double &generator,
+              double &uchyb,
+              double &PID,
+              double &WartWyjsc,
+              GeneratorSygnalu &gen,
+              int k)
     {
-        // Używamy własnego licznika generatora
-        generatorVal = gen.generuj(k_generator);
-        k_generator++;
+        // 1. wartość zadana
+        generator = gen.generuj(k);
 
-        uchyb = generatorVal - wartwyjsc_poprzedni;
+        // 2. uchyb
+        uchyb = generator - wartwyjsc_poprzedni;
+
+        // 3. regulator
         PID = pid.symuluj(uchyb);
+     /*   const double MAX_STEROWANIE = 100.0;
+        if (PID > MAX_STEROWANIE) {
+            PID = MAX_STEROWANIE;
+        }
+        if (PID < -MAX_STEROWANIE) {
+            PID = -MAX_STEROWANIE;
+        }
+*/
+        // 4. obiekt ARX
         WartWyjsc = obiekt.symuluj(PID);
+
+        // 5. aktualizacja pamięci
         wartwyjsc_poprzedni = WartWyjsc;
+    }
+    double symuluj(double wartosczadana)
+    {
+        double uchyb
+            = wartosczadana
+              - wartwyjsc_poprzedni; //obliczamy różnice między zawrtością zadaną a poprzednim wyjściem obiektu
+
+        double PID = pid.symuluj(uchyb); //podajemy uchyb na regulatora PID
+
+        double WartWyjsc = obiekt.symuluj(PID); //podajemy sygnał sterujący do ModeluARX
+
+        wartwyjsc_poprzedni = WartWyjsc; //zapisujemy wyjście do obliczeń uchybu
+
+        return WartWyjsc; //zwracamy wartość
     }
 };

@@ -12,6 +12,7 @@
 #include <QtCharts/QChart>
 #include <QtCharts/QChartView>
 #include <QtCharts/QLineSeries>
+#include <QElapsedTimer>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -62,7 +63,6 @@ private slots:
 
     void on_Konf_ARX_Button_clicked();
 
-
     void on_STOP_Bttun_clicked();
 
     void on_RESET_Button_clicked();
@@ -75,11 +75,9 @@ private slots:
 
     void on_SpinBox_Stala_editingFinished();
 
+    void onKrokWykonany(double w, double y, double e, double u, int k, double P, double I, double D);
 
-    void onKrokWykonany(double t, double w, double y, double e, double u, int k,double P, double I, double D);
-
-    // Funkcja pomocnicza do automatycznego skalowania pionowego
-    void dopasujSkalePionowa(QValueAxis *osY, QLineSeries *pierwszaSeria, QLineSeries *drugaSeria = nullptr, QLineSeries *trzeciaSeria = nullptr);
+    void przeliczWykresy();
 
     void on_spinBoxOknoczasowe_editingFinished();
 
@@ -110,11 +108,15 @@ private:
     QValueAxis *pidX;
     QValueAxis *pidY;
 
-
-    QTimer *timer;
+    // Popraw kolejność inicjalizacji (ZMIEŃ KOLEJNOŚĆ!)
+    QTimer *timerPrzeliczania;
+    bool przeliczanieWykresu;
+    double doceloweOknoCzasowe;
     double T; // okres próbkowania [s]
 
     void wyczyscWykresy();
+    // Funkcja pomocnicza do automatycznego skalowania pionowego
+    void dopasujSkalePionowa(QValueAxis *osY, QLineSeries *pierwszaSeria, QLineSeries *drugaSeria = nullptr, QLineSeries *trzeciaSeria = nullptr);
 
     std::vector<double> aktualnyWektorA;
     std::vector<double> aktualnyWektorB;
@@ -126,7 +128,14 @@ private:
     double arx_yMin = -10.0;
     double arx_yMax = 10.0;
     bool arx_ograniczenia = true;
+    void usunStarePunkty(double nowyCzasStartu);
+    void usunStarePunktyZSERII(QLineSeries *seria, double nowyCzasStartu);
+    void usunNiewidocznePunkty(double minCzas);
+    void usunNiewidoczneZSERII(QLineSeries *seria, double minCzas);
+    int ostatnieK;
+    double skumulowanyCzas;
+    double ostatniCzas;
+
 };
 
 #endif // MAINWINDOW_H
-

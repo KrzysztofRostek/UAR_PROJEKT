@@ -2,21 +2,21 @@
 #include "qmath.h"
 #include <cmath>
 #include <cstdint>
-using namespace std;
+
 class GeneratorSygnalu
 {
 public:
-    enum Tryb { SINUS, PROSTOKAT }; //określenie typu pracy generatora
+    enum Tryb { SINUS, PROSTOKAT };
 
 private:
     Tryb tryb;
-
     double A;   // amplituda
-    double S;   // skŁadowa staŁa
-    double p;   // wypeŁnienie
+    double S;   // składowa stała
+    double p;   // wypełnienie (0.0 - 1.0)
     double TRZ; // okres rzeczywisty [s]
     int TT;     // taktowanie symulacji [ms]
-    int T;      // ile próbek na okres sygbału
+    double czasAkumulowany; // Akumulowany czas w sekundach
+    int ostatniKrok;       // Ostatni krok dla śledzenia zmiany interwału
 
 public:
     GeneratorSygnalu()
@@ -26,72 +26,67 @@ public:
         , p(0.5)
         , TRZ(1.0)
         , TT(100)
-        , T(10)
-    {} //Konstruktor
+        , czasAkumulowany(0.0)
+        , ostatniKrok(-1)
+    {}
 
-    void ustawTryb(Tryb t)
-    { //seter ustawienie trybu pracy generatora
-        tryb = t;
+    void ustawTryb(Tryb t) { tryb = t; }
+    void ustawA(double a) { A = a; }
+    void ustawS(double s) { S = s; }
+    void ustawP(double pp) {
+        // Ogranicz wypełnienie do zakresu 0.0 - 1.0
+        p = qBound(0.0, pp, 1.0);
     }
-    void ustawA(double a)
-    { //setter ustawienie Amplitudy
-        A = a;
-        przeliczT();
-    }
-    void ustawS(double s)
-    { //seter ustawienie składniowej stałej
-        S = s;
-    }
-    void ustawP(double pp)
-    { //seter ustawienie wypełnienia
-        p = pp;
-    }
-    void ustawTRZ(double trz)
-    { //seter ustawienie okresu
-        TRZ = trz;
-        przeliczT();
-    }
-    void ustawTT(int tt)
-    { //seter ustawienie taktowania
-        TT = tt;
-        przeliczT();
-    }
+    void ustawTRZ(double trz) { TRZ = trz; }
+    void ustawTT(int tt) { TT = tt; }
 
-    int getT() const
-    { //geter okres w próbkach
-        return T;
-    }
-    Tryb getTryb() const
-    { //geter tryb sygnału
-        return tryb;
-    }
+    Tryb getTryb() const { return tryb; }
+    int getTT() const { return TT; }
 
-    void przeliczT()
+    // Generuj wartość na podstawie czasu (nie indeksu próbki)
+    double generuj(int i)
     {
-        if (TT <= 0) { //zapobieganie dzieleniu przez 0
-            TT = 1;
+        // Oblicz czas dla tego kroku
+        double deltaCzas = TT / 1000.0; // Konwersja ms na s
+
+        if (ostatniKrok == -1 || i <= ostatniKrok) {
+            // Reset lub pierwsze wywołanie
+            czasAkumulowany = 0;
+        } else {
+            // Normalny postęp - dodaj interwał czasu
+            czasAkumulowany += deltaCzas;
         }
-        double Td = 5 * TRZ; //zamiana z s na ms
-        T = static_cast<int>(round(Td)); //zaokrąglanie liczby do całkowitej
-        if (T < 1)
-            T = 1; //ustawienie okresu minimalnego
+
+        ostatniKrok = i;
+
+        switch (tryb) {
+        case SINUS: {
+            if (TRZ <= 0) return S;
+            double czestotliwosc = 1.0 / TRZ;
+            return A * sin(2.0 * M_PI * czestotliwosc * czasAkumulowany) + S;
+        }
+        case PROSTOKAT: {
+            if (TRZ <= 0) return S;
+            double okres = TRZ;
+            double pozycjaWOkresie = fmod(czasAkumulowany, okres);
+            double czasWlaczenia = okres * p;
+
+            // Dla prostokąta: 0 do A (lub S do A+S)
+            if (pozycjaWOkresie < czasWlaczenia) {
+                return A + S; // stan wysoki: A + S
+            } else {
+                return S; // stan niski: tylko S (0 + S)
+            }
+        }
+        default: {
+            return S;
+        }
+        }
     }
 
-    double generuj(int i) const
-    {
-        double Ts = 0.01;          // okres próbkowania generatora (stały!)
-        double t = i * Ts;         // czas w sekundach
-        double val = S;
-
-        switch(tryb)
-        {
-        case SINUS:
-            val = A * sin(2 * M_PI / TRZ * t) + S;
-            break;
-        case PROSTOKAT:
-            val = (fmod(t, TRZ) < TRZ * p) ? (A + S) : S;
-            break;
-        }
-        return val;
+    // Reset generatora
+    void reset() {
+        czasAkumulowany = 0.0;
+        ostatniKrok = -1;
     }
 };

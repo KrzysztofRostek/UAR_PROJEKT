@@ -8,14 +8,17 @@
 #include <QtCharts/QChart>
 #include <QtCharts/QChartView>
 #include <QtCharts/QLineSeries>
-
 #include <QDebug>
 
-
+// Poprawiona kolejność inicjalizacji w konstruktorze
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , symulator(GeneratorSygnalu(), RegulatorPID(), ModelARX({0}, {0}))
+    , przeliczanieWykresu(false)
+    , doceloweOknoCzasowe(10.0)
+    , ostatnieK(-1)
+    , skumulowanyCzas(0.0)
     , aktualnyWektorA({0})
     , aktualnyWektorB({0})
     , aktualneOpoznienie(1)
@@ -23,6 +26,11 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     this->showMaximized();
+
+    timerPrzeliczania = new QTimer(this);
+    timerPrzeliczania->setSingleShot(true);
+    timerPrzeliczania->setInterval(150);
+    connect(timerPrzeliczania, &QTimer::timeout, this, &MainWindow::przeliczWykresy);
 
     //----Serie----//
     seriaP = new QLineSeries();
@@ -127,18 +135,46 @@ MainWindow::MainWindow(QWidget *parent)
     RegulatorchartView->setMinimumSize(0, 300);
 }
 
-
-void MainWindow::onKrokWykonany(double t, double w, double y,
-                                double e, double u, int,
-                                double P, double I, double D)
+void MainWindow::onKrokWykonany(double w, double y, double e, double u, int k, double P, double I, double D)
 {
-    double oknoSekundy = ui->spinBoxOknoczasowe->value();
-    double interwalMs  = symulator.getInterwalMs();
+    // 1. UZYSKAJ INTERWAŁ
+    static double aktualnyInterwalMs = symulator.getInterwalMs();
+    double nowyInterwalMs = symulator.getInterwalMs();
 
-    int n_docelowe = static_cast<int>((oknoSekundy * 1000.0) / interwalMs);
-    if (n_docelowe < 2) n_docelowe = 2;
+    if (qAbs(nowyInterwalMs - aktualnyInterwalMs) > 0.1) {
+        qDebug() << "Zmiana interwału:" << aktualnyInterwalMs << "->" << nowyInterwalMs << "ms";
+        aktualnyInterwalMs = nowyInterwalMs;
+    }
 
-    // Dodanie punktów
+    double interwalS = aktualnyInterwalMs / 1000.0;
+
+    // 2. OBLICZ CZAS - PROSTE PODEJŚCIE
+    double t;
+
+    if (k == 0 || k < ostatnieK) {
+        // Reset
+        t = 0;
+        skumulowanyCzas = 0;
+        ostatnieK = k;
+    }
+    else {
+        // Normalny postęp
+        t = skumulowanyCzas + interwalS;
+        skumulowanyCzas = t;
+        ostatnieK = k;
+    }
+
+    // 3. DEBUG
+    static int debugCount = 0;
+    if (debugCount++ % 100 == 0) {
+        qDebug() << QString("Krok: %1  Czas: %2s  Interwał: %3ms  w: %4")
+                        .arg(k)
+                        .arg(t, 0, 'f', 3)
+                        .arg(aktualnyInterwalMs)
+                        .arg(w, 0, 'f', 6);
+    }
+
+    // 4. DODAJ PUNKTY
     seriaZad->append(t, w);
     seriaRegulowana->append(t, y);
     seriaP->append(t, P);
@@ -147,33 +183,32 @@ void MainWindow::onKrokWykonany(double t, double w, double y,
     seriaUchyb->append(t, e);
     seriaRegulator->append(t, u);
 
-    // Usuwanie nadmiaru (STABILNE)
-    while (seriaZad->count() > n_docelowe)
-    {
-        seriaZad->remove(0);
-        seriaRegulowana->remove(0);
-        seriaP->remove(0);
-        seriaI->remove(0);
-        seriaD->remove(0);
-        seriaUchyb->remove(0);
-        seriaRegulator->remove(0);
+    // 5. PRZESUŃ OKNO
+    if (seriaZad->count() > 1) {
+        double najstarszyCzas = seriaZad->at(0).x();
+
+        if ((t - najstarszyCzas) > doceloweOknoCzasowe) {
+            double nowyStart = t - doceloweOknoCzasowe;
+            usunNiewidocznePunkty(nowyStart);
+        }
     }
 
-    if (seriaZad->count() < 2) return;
+    // 6. USTAW ZAKRESY
+    if (seriaZad->count() > 0) {
+        double startTime = qMax(0.0, t - doceloweOknoCzasowe);
+        double endTime = t;
 
-    double startTime = seriaZad->at(0).x();
+        mainX->setRange(startTime, endTime);
+        pidX->setRange(startTime, endTime);
+        uchybX->setRange(startTime, endTime);
+        regX->setRange(startTime, endTime);
 
-    mainX->setRange(startTime, t);
-    pidX->setRange(startTime, t);
-    uchybX->setRange(startTime, t);
-    regX->setRange(startTime, t);
-
-    dopasujSkalePionowa(mainY, seriaZad, seriaRegulowana);
-    dopasujSkalePionowa(pidY, seriaP, seriaI, seriaD);
-    dopasujSkalePionowa(uchybY, seriaUchyb);
-    dopasujSkalePionowa(regY, seriaRegulator);
+        dopasujSkalePionowa(mainY, seriaZad, seriaRegulowana);
+        dopasujSkalePionowa(pidY, seriaP, seriaI, seriaD);
+        dopasujSkalePionowa(uchybY, seriaUchyb);
+        dopasujSkalePionowa(regY, seriaRegulator);
+    }
 }
-
 void MainWindow::dopasujSkalePionowa(QValueAxis *osY, QLineSeries *pierwszaSeria, QLineSeries *drugaSeria, QLineSeries *trzeciaSeria)
 {
     double minWartosc = 999999.0;
@@ -183,106 +218,187 @@ void MainWindow::dopasujSkalePionowa(QValueAxis *osY, QLineSeries *pierwszaSeria
     // Pobieramy aktualny czas rozpoczecia wykresu z osi X
     double czasStartu = mainX->min();
 
-    // Tworzymy liste pomocnicza, zeby latwiej przejsc przez wszystkie serie w petli
+    // Tworzymy liste pomocnicza
     QList<QLineSeries*> listaSerii;
 
-    if (pierwszaSeria != nullptr)
-    {
-        listaSerii.append(pierwszaSeria);
-    }
+    if (pierwszaSeria != nullptr) listaSerii.append(pierwszaSeria);
+    if (drugaSeria != nullptr) listaSerii.append(drugaSeria);
+    if (trzeciaSeria != nullptr) listaSerii.append(trzeciaSeria);
 
-    if (drugaSeria != nullptr)
-    {
-        listaSerii.append(drugaSeria);
-    }
-
-    if (trzeciaSeria != nullptr)
-    {
-        listaSerii.append(trzeciaSeria);
-    }
-
-    // Przeszukujemy kazda serie, aby znalezc wartosci min i max widoczne na ekranie
-    for (QLineSeries *seria : listaSerii)
-    {
+    // Szukamy od początku do końca (prostsze)
+    for (QLineSeries *seria : listaSerii) {
         QList<QPointF> punkty = seria->points();
 
-        // Idziemy od konca listy (najnowsze punkty)
-        for (int i = punkty.size() - 1; i >= 0; i--)
-        {
+        for (int i = 0; i < punkty.size(); i++) {
             // Sprawdzamy, czy punkt miesci sie w widocznym oknie czasowym
-            if (punkty[i].x() < czasStartu)
-            {
-                // Jesli punkt jest starszy niz lewa krawedz wykresu,
-                // przerywamy szukanie w tej konkretnej serii.
-                break;
-            }
+            if (punkty[i].x() >= czasStartu) {
+                czyZnalezionoJakikolwiekPunkt = true;
 
-            czyZnalezionoJakikolwiekPunkt = true;
-
-            // Sprawdzamy czy wartosc Y punktu jest mniejsza niz dotychczasowe minimum
-            if (punkty[i].y() < minWartosc)
-            {
-                minWartosc = punkty[i].y();
-            }
-
-            // Sprawdzamy czy wartosc Y punktu jest wieksza niz dotychczasowe maksimum
-            if (punkty[i].y() > maxWartosc)
-            {
-                maxWartosc = punkty[i].y();
+                if (punkty[i].y() < minWartosc) minWartosc = punkty[i].y();
+                if (punkty[i].y() > maxWartosc) maxWartosc = punkty[i].y();
             }
         }
     }
 
-    // Jesli w oknie czasowym znalezlismy jakiekolwiek punkty, ustawiamy skale osi Y
-    if (czyZnalezionoJakikolwiekPunkt == true)
-    {
+    if (czyZnalezionoJakikolwiekPunkt) {
         double rozpietosc = maxWartosc - minWartosc;
 
-        // Sprawdzamy, czy sygnal nie jest plaska linia
-        if (rozpietosc < 0.001)
-        {
-            // Dla plaskiego sygnalu dajemy staly margines +/- 1.0
-            osY->setRange(minWartosc - 1.0, maxWartosc + 1.0);
-        }
-        else
-        {
-            // Obliczamy margines (10% wysokosci wykresu), zeby linia nie dotykala brzegow
-            double margines = rozpietosc * 0.1;
+        if (rozpietosc < 0.001) {
+            // Dla plaskiego sygnalu dajemy staly margines
+            osY->setRange(minWartosc - 0.5, maxWartosc + 0.5);
+        } else {
+            // ZWIĘKSZONY margines (15% zamiast 10%) dla lepszej czytelności
+            double margines = rozpietosc * 0.15;
+            // Minimalny margines
+            if (margines < 0.1) margines = 0.1;
             osY->setRange(minWartosc - margines, maxWartosc + margines);
         }
     }
 }
+
+
+
+void MainWindow::on_spinBoxOknoczasowe_editingFinished()
+{
+    int noweOkno = ui->spinBoxOknoczasowe->value();
+
+    // Jeśli nie ma zmian, wyjdź
+    if (qFuzzyCompare(noweOkno, doceloweOknoCzasowe)) {
+        return;
+    }
+
+    qDebug() << "Zmiana okna czasowego:" << doceloweOknoCzasowe << "->" << noweOkno;
+
+    // 1. ZAPAMIĘTAJ AKTUALNY STAN
+    double staryOkno = doceloweOknoCzasowe;
+    bool bylyPunkty = (seriaZad->count() > 0);
+    double aktualnyCzas = 0;
+
+    if (bylyPunkty) {
+        aktualnyCzas = seriaZad->points().last().x();
+    }
+
+    // 2. Ustaw nowe okno
+    doceloweOknoCzasowe = noweOkno;
+
+    // 3. Jeśli nie ma punktów, po prostu ustaw zakres
+    if (!bylyPunkty) {
+        mainX->setRange(0, doceloweOknoCzasowe);
+        pidX->setRange(0, doceloweOknoCzasowe);
+        uchybX->setRange(0, doceloweOknoCzasowe);
+        regX->setRange(0, doceloweOknoCzasowe);
+        return;
+    }
+
+    // 4. OBLICZ NOWY ZAKRES OSI X (NAJWAŻNIEJSZE!)
+    double nowyStart = aktualnyCzas - doceloweOknoCzasowe;
+    if (nowyStart < 0) nowyStart = 0;
+    double nowyKoniec = aktualnyCzas;
+
+    // 5. USTAWIENIE ZAKRESU OSI X (natychmiast!)
+    mainX->setRange(nowyStart, nowyKoniec);
+    pidX->setRange(nowyStart, nowyKoniec);
+    uchybX->setRange(nowyStart, nowyKoniec);
+    regX->setRange(nowyStart, nowyKoniec);
+
+    // 6. USUŃ PUNKTY KTÓRE SĄ TERAZ POZA WIDOKIEM
+    // (tylko jeśli zmniejszamy okno - przy zwiększaniu nic nie usuwamy)
+    if (noweOkno < staryOkno) {
+        usunNiewidocznePunkty(nowyStart);
+    }
+
+    // 7. NATYCHMIASTOWE ODŚWIEŻENIE
+    QApplication::processEvents();
+
+}
+
+void MainWindow::usunNiewidocznePunkty(double minCzas)
+{
+    // Usuwa punkty starsze niż minCzas ze WSZYSTKICH serii
+
+    // Dla każdej serii indywidualnie
+    usunNiewidoczneZSERII(seriaZad, minCzas);
+    usunNiewidoczneZSERII(seriaRegulowana, minCzas);
+    usunNiewidoczneZSERII(seriaP, minCzas);
+    usunNiewidoczneZSERII(seriaI, minCzas);
+    usunNiewidoczneZSERII(seriaD, minCzas);
+    usunNiewidoczneZSERII(seriaUchyb, minCzas);
+    usunNiewidoczneZSERII(seriaRegulator, minCzas);
+}
+
+void MainWindow::usunNiewidoczneZSERII(QLineSeries *seria, double minCzas)
+{
+    if (!seria || seria->count() == 0) return;
+
+    // Zbierz tylko punkty które mają być zachowane
+    QVector<QPointF> punktyDoZachowania;
+    QList<QPointF> wszystkiePunkty = seria->points();
+
+    for (const QPointF &punkt : wszystkiePunkty) {
+        if (punkt.x() >= minCzas) {
+            punktyDoZachowania.append(punkt);
+        }
+    }
+
+    // Jeśli liczba się zmieniła, zastąp serie
+    if (punktyDoZachowania.size() != seria->count()) {
+        seria->clear();
+        for (const QPointF &punkt : punktyDoZachowania) {
+            seria->append(punkt);
+        }
+    }
+}
+void MainWindow::usunStarePunkty(double nowyCzasStartu)
+{
+    // Usuń punkty z każdej serii, które są starsze niż nowy czas startu
+    usunStarePunktyZSERII(seriaZad, nowyCzasStartu);
+    usunStarePunktyZSERII(seriaRegulowana, nowyCzasStartu);
+    usunStarePunktyZSERII(seriaP, nowyCzasStartu);
+    usunStarePunktyZSERII(seriaI, nowyCzasStartu);
+    usunStarePunktyZSERII(seriaD, nowyCzasStartu);
+    usunStarePunktyZSERII(seriaUchyb, nowyCzasStartu);
+    usunStarePunktyZSERII(seriaRegulator, nowyCzasStartu);
+}
+void MainWindow::usunStarePunktyZSERII(QLineSeries *seria, double nowyCzasStartu)
+{
+    if (!seria || seria->count() == 0) return;
+
+    // 1. Zbierz punkty które mają być ZACHOWANE (>= nowyCzasStartu)
+    QVector<QPointF> punktyDoZachowania;
+    QList<QPointF> wszystkiePunkty = seria->points();
+
+    for (int i = 0; i < wszystkiePunkty.size(); i++) {
+        if (wszystkiePunkty[i].x() >= nowyCzasStartu) {
+            punktyDoZachowania.append(wszystkiePunkty[i]);
+        }
+    }
+
+    // 2. Jeśli liczba punktów się zmieniła, ZASTĄP serie
+    if (punktyDoZachowania.size() != seria->count()) {
+        seria->clear();
+
+        // 3. Dodaj zachowane punkty z powrotem
+        for (const QPointF &punkt : punktyDoZachowania) {
+            seria->append(punkt);
+        }
+    }
+}
+
 void MainWindow::wyczyscWykresy()
 {
-    // MAIN
     seriaZad->clear();
     seriaRegulowana->clear();
-
-    // PID
     seriaP->clear();
     seriaI->clear();
     seriaD->clear();
-
-    // UCHYB
     seriaUchyb->clear();
-
-    // REGULATOR
     seriaRegulator->clear();
 
-    // Reset osi
-    mainX->setRange(0, 10);
-    mainY->setRange(-1, 1);
-
-    pidX->setRange(0, 10);
-    pidY->setRange(-1, 1);
-
-    uchybX->setRange(0, 10);
-    uchybY->setRange(-1, 1);
-
-    regX->setRange(0, 10);
-    regY->setRange(-1, 1);
+    mainX->setRange(0, doceloweOknoCzasowe);
+    pidX->setRange(0, doceloweOknoCzasowe);
+    uchybX->setRange(0, doceloweOknoCzasowe);
+    regX->setRange(0, doceloweOknoCzasowe);
 }
-
 
 MainWindow::~MainWindow()
 {
@@ -325,23 +441,24 @@ void MainWindow::on_spinBOX_Czstotliwosc_editingFinished()
     ui->spinBOX_Czstotliwosc->setSingleStep(0.01);
     ui->spinBOX_Czstotliwosc->setDecimals(2);
 }
+
 void MainWindow::on_spinBox_Wypelnienie_editingFinished()
 {
     symulator.setGeneratorP(ui->spinBox_Wypelnienie->value());
 }
 
-
 void MainWindow::on_SpinBox_Stala_editingFinished()
 {
     symulator.setGeneratorS(ui->SpinBox_Stala->value());
 }
+
 void MainWindow::on_spinBOX_Td_editingFinished()
 {
     symulator.setPID_Td(ui->spinBOX_Td->value());
     ui->spinBOX_Td->setMinimum(0.0);
     ui->spinBOX_Td->setMaximum(1000.0);
     ui->spinBOX_Td->setSingleStep(0.1);
-    ui->spinBOX_Td->setDecimals(1);
+    ui->spinBOX_Td->setDecimals(2);
 }
 
 void MainWindow::on_spinBOX_Ti_editingFinished()
@@ -355,38 +472,24 @@ void MainWindow::on_spinBOX_Ti_editingFinished()
 
 void MainWindow::on_spinBOX_Interwal_editingFinished()
 {
-    int ms = ui->spinBOX_Interwal->value();
+    int nowyInterwal = ui->spinBOX_Interwal->value();
+    int staryInterwal = symulator.getInterwalMs();
 
-    symulator.setInterwalMs(ms);
-    symulator.setPID_T(ms / 1000.0);
+    qDebug() << "Zmiana interwału z" << staryInterwal << "na" << nowyInterwal << "ms";
 
-    ui->spinBOX_Interwal->setMaximum(1000);
+
+
+    // Ustaw nowy interwał
+    symulator.setGeneratorTT(nowyInterwal);
+    symulator.setInterwalMs(nowyInterwal);
+    symulator.setPID_T(nowyInterwal / 1000.0);
+
+    // Aktualizuj UI
     ui->spinBOX_Interwal->setMaximum(1000);
     ui->spinBOX_Interwal->setMinimum(10);
     ui->spinBOX_Interwal->setSingleStep(1);
     ui->spinBOX_Interwal->setDecimals(0);
-
-
 }
-
-void MainWindow::on_spinBoxOknoczasowe_editingFinished()
-{
-    // Odswiezenie osi X
-    if (seriaZad->count() > 0)
-    {
-        double okno = ui->spinBoxOknoczasowe->value();
-        double t_koncowe = seriaZad->points().last().x();
-        double t_startowe = t_koncowe - okno;
-
-        if (t_startowe < 0) t_startowe = 0;
-
-        mainX->setRange(t_startowe, t_koncowe);
-        pidX->setRange(t_startowe, t_koncowe);
-        uchybX->setRange(t_startowe, t_koncowe);
-        regX->setRange(t_startowe, t_koncowe);
-    }
-}
-
 
 void MainWindow::on_radio_przed_toggled(bool checked)
 {
@@ -426,35 +529,50 @@ void MainWindow::on_RESET_Button_clicked()
 
     symulator.setPID_Kp(0);
     ui->spinBOX_WzmocK->setValue(0);
+
     symulator.setPID_Ti(0);
     ui->spinBOX_Ti->setValue(0);
+
     symulator.setPID_Td(0);
     ui->spinBOX_Td->setValue(0);
+
     symulator.setGeneratorA(0);
     ui->spinBOX_Amplituda->setValue(0);
-    symulator.setGeneratorTRZ(0);
-    ui->spinBOX_Czstotliwosc->setValue(0);
+
+    symulator.setGeneratorTRZ(1.0);
+    ui->spinBOX_Czstotliwosc->setValue(1.0);
+
     symulator.setGeneratorTT(200);
+    symulator.setInterwalMs(200);
+    symulator.setPID_T(0.2);
     ui->spinBOX_Interwal->setValue(200);
+
     symulator.setGeneratorS(0);
     ui->SpinBox_Stala->setValue(0);
-    symulator.setGeneratorP(0);
-    ui->spinBox_Wypelnienie->setValue(0);
 
+    symulator.setGeneratorP(0.5);
+    ui->spinBox_Wypelnienie->setValue(0.5);
 
     symulator.setPID_TypCalki(RegulatorPID::Zew);
     ui->radio_przed->setChecked(true);
     ui->radio_pod->setChecked(false);
+
     aktualnyWektorA = {0};
     aktualnyWektorB = {0};
     aktualneOpoznienie = 1;
     aktualnySzum = 0.0;
-
-
     symulator.setARX(aktualnyWektorA, aktualnyWektorB, aktualneOpoznienie, aktualnySzum);
+
+    ostatnieK = -1;
+    skumulowanyCzas = 0.0;
     wyczyscWykresy();
 }
 
+void MainWindow::przeliczWykresy()
+{
+    przeliczanieWykresu = false;
+
+}
 void MainWindow::ustawARXDane(const std::vector<double> &a,
                               const std::vector<double> &b,
                               int opoznienie,
@@ -489,7 +607,6 @@ void MainWindow::on_Konf_ARX_Button_clicked()
 
         connect(arxwindow, &ARXwindow::zatwierdzonoARX, this, &MainWindow::ustawARXDane);
     }
-
 
     arxwindow->ustawDane(aktualnyWektorA, aktualnyWektorB, aktualneOpoznienie, aktualnySzum,
                          arx_uMin, arx_uMax, arx_yMin, arx_yMax, arx_ograniczenia);
@@ -584,7 +701,3 @@ void MainWindow::on_Wczytaj_Button_clicked()
         QMessageBox::warning(this, "blad", "nie udało sie wczytac");
     }
 }
-
-
-
-
